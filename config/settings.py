@@ -8,7 +8,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-pvbql8bi=baoyahjqvx7r!^w!1aa!&$mdg%_^jc3cx1=@ss$ia'
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "ride-production-89bb.up.railway.app"
+]
 
 # Application definition
 INSTALLED_APPS = [
