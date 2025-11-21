@@ -4,9 +4,12 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
+
 dependencies = [
     "django",
     "django-stubs>=5.2.7",
     "pytelegrambotapi>=4.29.1",
-    "rest-framework",
+    "djangorestframework>=3.15.0",
+    "drf-yasg>=1.21.8",
+    "django-filter>=24.3",
 ]
