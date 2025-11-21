@@ -1,0 +1,169 @@
+# bot_app/views/driver_views.py
+from rest_framework import viewsets, status, filters
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Q, Sum
+from ..models import DriverStatus
+from ..serializers.driver import *
+from ..filters.driver_filter import DriverFilter, CarFilter, DriverTransactionFilter
+
+
+class DriverViewSet(viewsets.ModelViewSet):
+    """
+    Driverlar uchun ViewSet
+    """
+    queryset = Driver.objects.all().prefetch_related('cars')
+    serializer_class = DriverSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_class = DriverFilter
+    search_fields = ['from_location', 'to_location',]
+    ordering_fields = ['created_at', 'amount']
+    ordering = ['-created_at']
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return DriverListSerializer
+        return DriverSerializer
+
+    @action(detail=True, methods=['get'])
+    def cars(self, request, pk=None):
+        """Driverning mashinalarini olish"""
+        driver = self.get_object()
+        cars = driver.cars.all()
+        serializer = CarSerializer(cars, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def by_telegram_id(self, request):
+        """Telegram ID bo'yicha driver qidirish"""
+        telegram_id = request.query_params.get('user')
+
+        if not telegram_id:
+            return Response(
+                {'error': 'telegram_id parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            driver = Driver.objects.get(telegram_id=telegram_id)
+            serializer = self.get_serializer(driver)
+            return Response(serializer.data)
+        except Driver.DoesNotExist:
+            return Response(
+                {'error': 'Driver not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=True, methods=['patch'])
+    def update_status(self, request, pk=None):
+        """Driver statusini yangilash"""
+        driver = self.get_object()
+        new_status = request.data.get('status')
+
+        if new_status not in dict(DriverStatus.choices):
+            return Response(
+                {'error': 'Invalid status'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        driver.status = new_status
+        driver.save()
+
+        return Response({
+            'message': 'Status updated successfully',
+            'status': driver.status,
+            'status_display': driver.get_status_display()
+        })
+
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        """Driverlarni qidirish"""
+        query = request.query_params.get('q', '')
+
+        if not query:
+            return Response(
+                {'error': 'Search query (q) parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        drivers = Driver.objects.filter(
+            Q(from_location__icontains=query) |
+            Q(to_location__icontains=query) |
+            Q(phone__icontains=query)
+        )
+
+        serializer = DriverListSerializer(drivers, many=True)
+        return Response(serializer.data)
+
+
+class CarViewSet(viewsets.ModelViewSet):
+    """
+    Mashinalar uchun ViewSet
+    """
+    queryset = Car.objects.all().select_related('driver')
+    serializer_class = CarSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = CarFilter
+    search_fields = ['car_number', 'car_model', 'car_color']
+
+    @action(detail=False, methods=['get'])
+    def by_driver(self, request):
+        """Driver ID bo'yicha mashinalarni olish"""
+        driver_id = request.query_params.get('driver_id')
+
+        if not driver_id:
+            return Response(
+                {'error': 'driver_id parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        cars = Car.objects.filter(driver_id=driver_id)
+        serializer = self.get_serializer(cars, many=True)
+        return Response(serializer.data)
+
+
+class DriverTransactionViewSet(viewsets.ModelViewSet):
+    """
+    Driver transaksiyalari uchun ViewSet
+    """
+    queryset = DriverTransaction.objects.all().select_related('driver')
+    serializer_class = DriverTransactionSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_class = DriverTransactionFilter
+    ordering_fields = ['created_at', 'amount']
+    ordering = ['-created_at']
+
+    @action(detail=False, methods=['get'])
+    def driver_stats(self, request):
+        """Driver statistikasi"""
+        driver_id = request.query_params.get('driver_id')
+
+        if not driver_id:
+            return Response(
+                {'error': 'driver_id parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            driver = Driver.objects.get(id=driver_id)
+            transactions = DriverTransaction.objects.filter(driver=driver)
+            total_earnings = transactions.aggregate(total=Sum('amount'))['total'] or 0
+
+            return Response({
+                'driver_id': driver_id,
+                'driver_name': driver.from_location,
+                'total_earnings': total_earnings,
+                'transaction_count': transactions.count(),
+                'current_balance': driver.amount
+            })
+
+        except Driver.DoesNotExist:
+            return Response(
+                {'error': 'Driver not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
