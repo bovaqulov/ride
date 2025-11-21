@@ -23,8 +23,8 @@ COPY requirements.txt .
 
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-RUN python manage.py makemigrations
-RUN python manage.py migrate
+RUN python app/manage.py makemigrations
+RUN python app/manage.py migrate
 # Copy project
 COPY . .
 
