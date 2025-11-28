@@ -178,7 +178,7 @@ class CityAdmin(admin.ModelAdmin):
         else:
             return (
                 ('Asosiy maʼlumotlar', {
-                    'fields': ('title', 'subcategory', 'is_allowed')
+                    'fields': ('title', 'subcategory', "latitude", "longitude", 'is_allowed')
                 }),
             )
 
