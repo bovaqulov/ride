@@ -89,6 +89,8 @@ else:
         }
     }
 
+print(DATABASES)
+
 # REST Framework settings
 REST_FRAMEWORK = {
     # To'g'ri schema class
