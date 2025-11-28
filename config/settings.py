@@ -4,6 +4,10 @@ Django settings for config project.
 import os
 
 from pathlib import Path
+import dotenv
+
+dotenv.load_dotenv()
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -154,6 +158,11 @@ USE_TZ = True
 
 # Static files
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'staticfiles'),
+]
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
