@@ -17,9 +17,12 @@ services:
     image: postgres:16
     container_name: ride_db
     environment:
-      POSTGRES_DB: ${PGDATABASE}
-      POSTGRES_USER: ${PGUSER}
-      POSTGRES_PASSWORD: ${PGPASSWORD}
+      DEBUG: "False"
+      PGDATABASE: "${{Postgres.PGDATABASE}}"
+      PGHOST: "${{Postgres.PGHOST}}"
+      PGPASSWORD: "${{Postgres.PGPASSWORD}}"
+      PGPORT: "${{Postgres.PGPORT}}"
+      PGUSER: "${{Postgres.PGUSER}}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
