@@ -11,7 +11,7 @@ class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
         fields = [
-            'id', 'title', 'translate', 'subcategory', 'subcategory_title', 'subcategory_id',
+            'id', 'title', 'translate', 'subcategory', 'latitude', 'longitude', 'subcategory_title', 'subcategory_id',
             'is_allowed', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']

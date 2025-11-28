@@ -9,3 +9,5 @@ class DriverService(BaseService):
             "POST",
             "travel/",
             json=PassengerTravelSerializer(travel).data)
+
+

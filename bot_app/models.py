@@ -114,6 +114,8 @@ class DriverTransaction(models.Model):
 class City(models.Model):
     title = models.CharField(max_length=200)
     subcategory = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     translate = models.JSONField(null=True, blank=True)
     is_allowed = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
