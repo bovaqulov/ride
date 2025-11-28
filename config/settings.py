@@ -152,7 +152,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
 STATICFILES_DIRS = [
-    BASE_DIR / "staticfiles",  # agar sizda qo‘shimcha static papkalar bo‘lsa
+    BASE_DIR / "staticfiles",
 ]
 
 # Default primary key field type

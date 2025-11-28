@@ -6,4 +6,4 @@ class BotAppConfig(AppConfig):
     name = 'bot_app'
 
     def ready(self):
-        import bot_app.signals
+        import bot_app.signals.create.travel
