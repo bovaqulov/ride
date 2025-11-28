@@ -1,9 +1,7 @@
 # bot_app/filters/driver_filter.py
-import django_filters
 from django_filters import rest_framework as filters
 from django.db.models import Q
 from ..models import Driver, Car, DriverTransaction, DriverStatus
-from datetime import datetime, timedelta
 
 
 class DriverFilter(filters.FilterSet):
@@ -28,7 +26,7 @@ class DriverFilter(filters.FilterSet):
 
     class Meta:
         model = Driver
-        fields = ['status', 'from_location', 'to_location', 'phone']
+        fields = ['status', 'from_location', 'to_location']
 
     def filter_by_location(self, queryset, name, value):
         return queryset.filter(

@@ -51,8 +51,5 @@ class DriverListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Driver
-        fields = ('id', 'user', 'from_location', 'to_location', 'status', 'status_display',
+        fields = ('id', 'telegram_id', 'from_location', 'to_location', 'status', 'status_display',
                'amount', 'cars_count', 'created_at')
-
-    def get_cars_count(self, obj):
-        return obj.cars.count()

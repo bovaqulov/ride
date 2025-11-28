@@ -40,9 +40,8 @@ class PassengerTravelViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
-
-        # Return full object after creation
         full_serializer = PassengerTravelSerializer(instance)
+
         return Response(full_serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'])

@@ -69,7 +69,7 @@ class DriverStatus(models.TextChoices):
     ONLINE = "online", "Online"
 
 class Driver(models.Model):
-    user = models.BigIntegerField(unique=True)
+    telegram_id = models.BigIntegerField(unique=True)
     from_location = models.CharField(max_length=200)
     to_location = models.CharField(max_length=200)
     status = models.CharField(max_length=10, choices=DriverStatus.choices, default=DriverStatus.OFFLINE)
@@ -84,7 +84,7 @@ class Driver(models.Model):
         ordering = ['-created_at']
 
 class Car(models.Model):
-    driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
+    driver = models.ForeignKey(Driver, on_delete=models.CASCADE, related_name="driver")
     car_number = models.CharField(max_length=200, unique=True)
     car_model = models.CharField(max_length=200)
     car_color = models.CharField(max_length=200)
@@ -109,3 +109,15 @@ class DriverTransaction(models.Model):
         return self.driver
     class Meta:
         ordering = ['-created_at']
+
+
+class City(models.Model):
+    title = models.CharField(max_length=200)
+    subcategory = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True)
+    translate = models.JSONField(null=True, blank=True)
+    is_allowed = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title

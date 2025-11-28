@@ -14,7 +14,7 @@ class DriverViewSet(viewsets.ModelViewSet):
     """
     Driverlar uchun ViewSet
     """
-    queryset = Driver.objects.all().prefetch_related('cars')
+    queryset = Driver.objects.all()
     serializer_class = DriverSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -39,7 +39,7 @@ class DriverViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def by_telegram_id(self, request):
         """Telegram ID bo'yicha driver qidirish"""
-        telegram_id = request.query_params.get('user')
+        telegram_id = request.query_params.get('telegram_id')
 
         if not telegram_id:
             return Response(

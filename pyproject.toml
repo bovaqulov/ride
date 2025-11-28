@@ -13,4 +13,7 @@ dependencies = [
     "drf-yasg>=1.21.8",
     "django-filter>=24.3",
     "gunicorn>=23.0.0",
+    "celery>=5.5.3",
+    "fastapi>=0.122.0",
+    "uvicorn>=0.38.0",
 ]

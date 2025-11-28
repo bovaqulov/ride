@@ -9,6 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-pvbql8bi=baoyahjqvx7r!^w!1aa!&$mdg%_^jc3cx1=@ss$ia'
 DEBUG = True
 ALLOWED_HOSTS = [
+    '127.0.0.1',
     "ride-production-89bb.up.railway.app"
 ]
 
@@ -166,5 +167,11 @@ STATICFILES_DIRS = []
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://ride-production-89bb.up.railway.app",
+    "https://ride-production-89bb.up.railway.app"
 ]
+
+CORS_ALLOW_ALL_ORIGINS = True
+
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
