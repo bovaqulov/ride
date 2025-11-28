@@ -7,7 +7,7 @@ class BaseService:
     """User service for API communication"""
 
     def __init__(self):
-        self.base_url = "http://127.0.0.1:8080/"
+        self.base_url = "https://5913e7f7502a.ngrok-free.app/"
         self.session: Optional[requests.Session] = None
 
     def __enter__(self):
