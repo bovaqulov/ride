@@ -181,7 +181,7 @@ SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
         'Token': {
             'type': 'apiKey',
-            'name': 'Authorization',
+            'name': 'Authorization: Token',
             'in': 'header'
         }
     },
