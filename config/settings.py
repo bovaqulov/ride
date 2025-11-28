@@ -164,8 +164,8 @@ REDOC_SETTINGS = {
     'LAZY_RENDERING': False,
 }
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_DIRS = []
+
+
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 CSRF_TRUSTED_ORIGINS = [
@@ -186,8 +186,8 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = 'redis://default:GCcEotAzxsPJAsyehxeImPDSTzpPISLX@metro.proxy.rlwy.net:50038'
+CELERY_RESULT_BACKEND = 'redis://default:GCcEotAzxsPJAsyehxeImPDSTzpPISLX@metro.proxy.rlwy.net:50038'
 
 SWAGGER_SETTINGS = {
     'DEFAULT_MODEL_RENDERING': 'example',
