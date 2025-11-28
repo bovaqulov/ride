@@ -106,7 +106,7 @@ class CityAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'updated_at', 'subcategory_tree']
     fieldsets = (
         ('Asosiy maʼlumotlar', {
-            'fields': ('title', 'translate', 'subcategory', 'is_allowed')
+            'fields': ('title', 'translate', "latitude", "longitude", 'subcategory', 'is_allowed')
         }),
         ('Qoʻshimcha maʼlumotlar', {
             'fields': ('subcategory_tree', 'created_at', 'updated_at'),
