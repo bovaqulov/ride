@@ -4,6 +4,8 @@ Django settings for config project.
 import os
 
 from pathlib import Path
+
+import dj_database_url
 import dotenv
 
 dotenv.load_dotenv()
@@ -79,16 +81,12 @@ if DEBUG:
     }
 else:
     DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('PGDATABASE'),
-            'USER': os.getenv('PGUSER'),
-            'PASSWORD': os.getenv('PGPASSWORD'),
-            'HOST': os.getenv('PGHOST', 'localhost'),
-            'PORT': os.getenv('PGPORT', '5432'),
-        }
+        'default': dj_database_url.config(
+            default=os.environ.get('DATABASE_URL', "postgresql://postgres:KfXSxCytxDoCpmnwwnkobIKtPjvOuiyL@postgres.railway.internal:5432/railway"),
+            conn_max_age=600,  # connection pooling uchun
+            ssl_require=False  # production muhitda True qilinadi
+        )
     }
-    print("Database: ", os.getenv('PGDATABASE'))
 
 # REST Framework settings
 REST_FRAMEWORK = {
