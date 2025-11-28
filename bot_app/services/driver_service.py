@@ -5,9 +5,14 @@ from ..serializers.passenger_travel import PassengerTravelSerializer
 class DriverService(BaseService):
 
     def notify(self, travel: PassengerTravel):
+
+        print(travel)
+
         return self._request(
             "POST",
-            "travel/",
+            "travel",
             json=PassengerTravelSerializer(travel).data)
+
+
 
 

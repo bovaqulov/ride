@@ -34,7 +34,7 @@ class BaseService:
         """Make sync HTTP request"""
         self.create_session()
 
-        url = f"{self.base_url}{endpoint}"
+        url = f"{self.base_url}{endpoint}/"
 
         try:
             response = self.session.request(method, url, **kwargs)

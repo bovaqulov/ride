@@ -1,8 +1,14 @@
+version: '3.9'
+
 services:
   web:
     build: .
     container_name: ride_web
-    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4
+    command: >
+      sh -c "python manage.py makemigrations --noinput &&
+             python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4"
     volumes:
       - .:/app
     env_file:
@@ -13,16 +19,28 @@ services:
       - db
       - redis
 
+  celery:
+    build: .
+    container_name: ride_celery
+    command: celery -A config worker --loglevel=info
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+
   db:
     image: postgres:16
     container_name: ride_db
     environment:
       DEBUG: "False"
-      PGDATABASE: "${{Postgres.PGDATABASE}}"
-      PGHOST: "${{Postgres.PGHOST}}"
-      PGPASSWORD: "${{Postgres.PGPASSWORD}}"
-      PGPORT: "${{Postgres.PGPORT}}"
-      PGUSER: "${{Postgres.PGUSER}}"
+      PGDATABASE: "${PGDATABASE}"
+      PGHOST: "${PGHOST}"
+      PGPASSWORD: "${PGPASSWORD}"
+      PGPORT: "${PGPORT}"
+      PGUSER: "${PGUSER}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:

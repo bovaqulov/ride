@@ -23,8 +23,9 @@ COPY . .
 EXPOSE 8000
 
 # 7. Django migrations va Gunicorn birlashtirilgan CMD
-CMD python manage.py makemigrations --noinput && \
+CMD sh -c "python manage.py makemigrations --noinput && \
     python manage.py migrate --noinput && \
     python manage.py createsuper && \
     python manage.py collectstatic --noinput && \
-    gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4
+    gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 4 & \
+    celery -A config worker --loglevel=info"

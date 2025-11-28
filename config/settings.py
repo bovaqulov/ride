@@ -14,10 +14,10 @@ dotenv.load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-pvbql8bi=baoyahjqvx7r!^w!1aa!&$mdg%_^jc3cx1=@ss$ia'
-DEBUG = os.environ.get('DEBUG', False)
-
+DEBUG = os.environ.get('DEBUG', True)
 ALLOWED_HOSTS = [
     '127.0.0.1',
+    "0.0.0.0",
     "ride-production-89bb.up.railway.app"
 ]
 
@@ -80,6 +80,8 @@ DATABASES = {
         ssl_require=False
     )
 }
+
+
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -185,8 +187,13 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 
+# CELERY_BROKER_URL = 'redis://default:GCcEotAzxsPJAsyehxeImPDSTzpPISLX@metro.proxy.rlwy.net:50038'
+# CELERY_RESULT_BACKEND = 'redis://default:GCcEotAzxsPJAsyehxeImPDSTzpPISLX@metro.proxy.rlwy.net:50038'
+
 CELERY_BROKER_URL = 'redis://default:GCcEotAzxsPJAsyehxeImPDSTzpPISLX@metro.proxy.rlwy.net:50038'
 CELERY_RESULT_BACKEND = 'redis://default:GCcEotAzxsPJAsyehxeImPDSTzpPISLX@metro.proxy.rlwy.net:50038'
+
+
 
 SWAGGER_SETTINGS = {
     'DEFAULT_MODEL_RENDERING': 'example',
