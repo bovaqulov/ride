@@ -88,8 +88,7 @@ else:
             'PORT': os.getenv('PGPORT', '5432'),
         }
     }
-
-print(DATABASES)
+    print("Database: ", os.getenv('PGDATABASE'))
 
 # REST Framework settings
 REST_FRAMEWORK = {
