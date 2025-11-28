@@ -185,5 +185,7 @@ SWAGGER_SETTINGS = {
             'in': 'header'
         }
     },
-    "SUPPORTED_SUBMIT_METHODS": ['get', 'post', 'put', 'patch', 'delete'],
+    'SUPPORTED_SUBMIT_METHODS': ['get', 'post', 'put', 'patch', 'delete'],
+    'DEFAULT_API_URL': 'https://ride-production-89bb.up.railway.app'
 }
+
