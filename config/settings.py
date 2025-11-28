@@ -82,9 +82,9 @@ if DEBUG:
 else:
     DATABASES = {
         'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL', "postgresql://postgres:KfXSxCytxDoCpmnwwnkobIKtPjvOuiyL@shortline.proxy.rlwy.net:14241/railway"),
-            conn_max_age=600,  # connection pooling uchun
-            ssl_require=False  # production muhitda True qilinadi
+            default="postgresql://postgres:KfXSxCytxDoCpmnwwnkobIKtPjvOuiyL@shortline.proxy.rlwy.net:14241/railway",
+            conn_max_age=600,
+            ssl_require=False
         )
     }
 
