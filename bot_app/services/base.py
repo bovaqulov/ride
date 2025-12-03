@@ -40,7 +40,7 @@ class BaseService:
         base_url = self.driver_url if driver else self.passenger_url
 
         url = f"{base_url}{endpoint}"
-
+        print(url)
         try:
             response = self.session.request(method, url, **kwargs)
 

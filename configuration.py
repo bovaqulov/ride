@@ -57,11 +57,11 @@ class EventSettings(BaseSettings):
 
     @property
     def PASSENGER_URL(self) -> str:
-        return self.PASSENGER_BOT_URL if self.DEBUG else "http://localhost:8888/"
+        return self.PASSENGER_BOT_URL
 
     @property
     def DRIVER_URL(self):
-        return self.DRIVER_BOT_URL if self.DEBUG else "http://localhost:8080/"
+        return self.DRIVER_BOT_URL
 
 
 
