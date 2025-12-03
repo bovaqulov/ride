@@ -15,6 +15,8 @@ def create_order(sender, instance: Order, created,  **kwargs):
 def update_order(sender, instance: Order, **kwargs):
     print(instance.status)
     if instance.driver:
+        if instance.status == TravelStatus.CREATED:
+            instance.status = TravelStatus.ASSIGNED
         notify_passenger_bot.delay(instance.pk)
 
     if instance.driver and instance.status == TravelStatus.ENDED:
