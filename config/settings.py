@@ -175,7 +175,7 @@ REDOC_SETTINGS = {
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://ride-production-89bb.up.railway.app"
+    "https://ride-production-62e7.up.railway.app"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -206,7 +206,7 @@ SWAGGER_SETTINGS = {
         }
     },
     'SUPPORTED_SUBMIT_METHODS': ['get', 'post', 'put', 'patch', 'delete'],
-    # 'DEFAULT_API_URL': env.DEFAULT_API_URL
+    'DEFAULT_API_URL': env.DEFAULT_API_URL
 }
 # settings.py
 LOGGING = {

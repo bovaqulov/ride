@@ -39,7 +39,7 @@ class EventSettings(BaseSettings):
         return [
             '127.0.0.1',
             "0.0.0.0",
-            "ride-production-89bb.up.railway.app"
+            "ride-production-62e7.up.railway.app"
         ]
 
     @property
