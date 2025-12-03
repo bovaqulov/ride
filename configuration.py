@@ -27,11 +27,11 @@ class EventSettings(BaseSettings):
 
     @property
     def CELERY_BROKER_URL(self):
-        return self.CELERY_BROKER_URL_DEMO if self.DEBUG  else self.REDIS_PUBLIC_URL
+        return  self.REDIS_PUBLIC_URL
 
     @property
     def CELERY_RESULT_BACKEND(self):
-        return self.CELERY_RESULT_BACKEND_DEMO if self.DEBUG else self.REDIS_PUBLIC_URL
+        return self.REDIS_PUBLIC_URL
 
     @property
     def ALLOWED_HOSTS(self) -> List[str]:
@@ -43,7 +43,7 @@ class EventSettings(BaseSettings):
 
     @property
     def DB_URL(self) -> str:
-        return self.DEMO_DB_URL if self.DEBUG else self.DATABASE_PUBLIC_URL
+        return self.DATABASE_PUBLIC_URL
 
     @property
     def init_database(self):
