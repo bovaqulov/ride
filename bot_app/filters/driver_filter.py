@@ -1,7 +1,7 @@
 # bot_app/filters/driver_filter.py
 from django_filters import rest_framework as filters
 from django.db.models import Q
-from ..models import Driver, Car, DriverTransaction, DriverStatus
+from ..models import Driver, Car, DriverTransaction, DriverStatus, TravelClass
 
 
 class DriverFilter(filters.FilterSet):
@@ -23,6 +23,7 @@ class DriverFilter(filters.FilterSet):
 
     # Universal location filter
     location = filters.CharFilter(method='filter_by_location')
+    car_class = filters.CharFilter(method='filter_by_car_class')
 
     class Meta:
         model = Driver
@@ -34,16 +35,22 @@ class DriverFilter(filters.FilterSet):
             Q(to_location__icontains=value)
         )
 
+    def filter_by_car_class(self, queryset, name, value):
+        return queryset.filter(
+            Q(driver__car_class=value)
+        )
+
 
 class CarFilter(filters.FilterSet):
     car_number = filters.CharFilter(lookup_expr='icontains')
     car_model = filters.CharFilter(lookup_expr='icontains')
     car_color = filters.CharFilter(lookup_expr='icontains')
+    car_class = filters.ChoiceFilter(choices=TravelClass.choices)
     driver = filters.NumberFilter(field_name='driver__id')
 
     class Meta:
         model = Car
-        fields = ['car_number', 'car_model', 'car_color', 'driver']
+        fields = ['car_number', 'car_model', 'car_class', 'car_color', 'driver']
 
 
 class DriverTransactionFilter(filters.FilterSet):

@@ -2,12 +2,15 @@ from typing import Optional, Dict, Any
 import requests
 import json
 
+from configuration import env
+
 
 class BaseService:
     """User service for API communication"""
 
     def __init__(self):
-        self.base_url =  "https://5913e7f7502a.ngrok-free.app/"
+        self.driver_url =  env.DRIVER_URL
+        self.passenger_url = env.PASSENGER_URL
         self.session: Optional[requests.Session] = None
 
     def __enter__(self):
@@ -30,11 +33,13 @@ class BaseService:
             self.session.close()
             self.session = None
 
-    def _request(self, method: str, endpoint: str, **kwargs) -> Dict[str, Any]:
+    def _request(self, method: str, endpoint: str, driver = True, **kwargs) -> Dict[str, Any]:
         """Make sync HTTP request"""
         self.create_session()
 
-        url = f"{self.base_url}{endpoint}/"
+        base_url = self.driver_url if driver else self.passenger_url
+
+        url = f"{base_url}{endpoint}"
 
         try:
             response = self.session.request(method, url, **kwargs)

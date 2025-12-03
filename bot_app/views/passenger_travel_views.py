@@ -4,9 +4,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
+from django.db.models import Q
 
 from ..filters.passenger_travel_filter import PassengerTravelFilter
-from ..models import PassengerTravel, TravelStatus
+from ..models import PassengerTravel
 from ..serializers.passenger_travel import (
     PassengerTravelSerializer,
     PassengerTravelCreateSerializer,
@@ -19,10 +20,10 @@ class PassengerTravelViewSet(viewsets.ModelViewSet):
     filterset_class = PassengerTravelFilter
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = [
-        'user', 'travel_class', 'status', 'has_woman'
+        'user', 'travel_class', 'has_woman'
     ]
     search_fields = [
-        'from_location', 'to_location'
+        'user'  # JSON fieldlarni oddiy search qila olmaydi, shuning uchun olib tashladik
     ]
     ordering_fields = [
         'price', 'passenger', 'created_at', 'updated_at'
@@ -44,29 +45,6 @@ class PassengerTravelViewSet(viewsets.ModelViewSet):
 
         return Response(full_serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['post'])
-    def update_status(self, request, pk=None):
-        """Custom action to update travel status"""
-        travel = self.get_object()
-        new_status = request.data.get('status')
-
-        if not new_status:
-            return Response(
-                {'error': 'Status is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        if new_status not in dict(TravelStatus.choices):
-            return Response(
-                {'error': 'Invalid status'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        travel.status = new_status
-        travel.save()
-
-        serializer = self.get_serializer(travel)
-        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def by_user(self, request):
@@ -84,16 +62,47 @@ class PassengerTravelViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def search_routes(self, request):
-        """Search for travels by from and to locations"""
-        from_loc = request.query_params.get('from')
-        to_loc = request.query_params.get('to')
+        """Search for travels by from and to locations (JSON field uchun)"""
+        from_city = request.query_params.get('from')
+        to_city = request.query_params.get('to')
 
         queryset = self.filter_queryset(self.get_queryset())
 
-        if from_loc:
-            queryset = queryset.filter(from_location__icontains=from_loc)
-        if to_loc:
-            queryset = queryset.filter(to_location__icontains=to_loc)
+        if from_city:
+            # JSON field ichida qidirish
+            queryset = queryset.filter(from_location__city__icontains=from_city)
+        if to_city:
+            # JSON field ichida qidirish
+            queryset = queryset.filter(to_location__city__icontains=to_city)
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def search_locations(self, request):
+        """Kengaytirilgan location search (from yoki to da qidirish)"""
+        search_term = request.query_params.get('q')
+        if not search_term:
+            return Response(
+                {'error': 'q parameter is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # from_location yoki to_location da qidirish
+        queryset = self.filter_queryset(self.get_queryset()).filter(
+            Q(from_location__city__icontains=search_term) |
+            Q(to_location__city__icontains=search_term)
+        )
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def get_queryset(self):
+        """Asosiy queryset - JSON fieldlarni optimize qilish"""
+        queryset = super().get_queryset()
+
+        # Faqat kerakli fieldlarni select qilish
+        if self.action == 'list':
+            queryset = queryset.select_related()  # Agar related modellar bo'lsa
+
+        return queryset

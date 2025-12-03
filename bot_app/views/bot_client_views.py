@@ -18,8 +18,8 @@ class BotClientViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_class = BotClientFilter
-    search_fields = ['full_name', 'username', 'phone']
-    ordering_fields = ['created_at', 'updated_at', 'total_rides', 'rating']
+    search_fields = ['full_name', 'username',]
+    ordering_fields = ['created_at', 'updated_at']
     ordering = ['-created_at']
 
     def get_serializer_class(self):
@@ -71,100 +71,6 @@ class BotClientViewSet(viewsets.ModelViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['get'])
-    def active_clients(self, request):
-        """Faol klientlarni olish"""
-        active_clients = self.get_queryset().filter(is_active=True, is_banned=False)
-        page = self.paginate_queryset(active_clients)
-        if page is not None:
-            serializer = BotClientListSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = BotClientListSerializer(active_clients, many=True)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'])
-    def banned_clients(self, request):
-        """Bloklangan klientlarni olish"""
-        banned_clients = self.get_queryset().filter(is_banned=True)
-        page = self.paginate_queryset(banned_clients)
-        if page is not None:
-            serializer = BotClientListSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = BotClientListSerializer(banned_clients, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'])
-    def ban(self, request, pk=None):
-        """Klientni bloklash"""
-        client = self.get_object()
-        client.is_banned = True
-        client.is_active = False
-        client.save()
-        serializer = BotClientSerializer(client)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'])
-    def unban(self, request, pk=None):
-        """Klientni blokdan chiqarish"""
-        client = self.get_object()
-        client.is_banned = False
-        client.is_active = True
-        client.save()
-        serializer = BotClientSerializer(client)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'])
-    def update_rating(self, request, pk=None):
-        """Klient reytingini yangilash"""
-        client = self.get_object()
-        rating = request.data.get('rating')
-
-        if rating is None:
-            return Response(
-                {'error': 'Rating talab qilinadi'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            rating = float(rating)
-            if rating < 1 or rating > 5:
-                raise ValueError
-        except (ValueError, TypeError):
-            return Response(
-                {'error': 'Rating 1 dan 5 gacha bo\'lishi kerak'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        client.rating = rating
-        client.save()
-        serializer = BotClientSerializer(client)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'])
-    def increment_rides(self, request, pk=None):
-        """Safar sonini oshirish"""
-        client = self.get_object()
-        client.total_rides += 1
-        client.save()
-        serializer = BotClientSerializer(client)
-        return Response(serializer.data)
-
-    @action(detail=False, methods=['get'])
-    def stats(self, request):
-        """Statistika olish"""
-        total_clients = self.get_queryset().count()
-        active_clients = self.get_queryset().filter(is_active=True).count()
-        banned_clients = self.get_queryset().filter(is_banned=True).count()
-        total_rides = self.get_queryset().aggregate(models.Sum('total_rides'))['total_rides__sum'] or 0
-
-        return Response({
-            'total_clients': total_clients,
-            'active_clients': active_clients,
-            'banned_clients': banned_clients,
-            'total_rides': total_rides
-        })
 
     @action(detail=False, methods=['get'], url_path='by-telegram-id/(?P<telegram_id>[^/.]+)')
     def by_telegram_id(self, request, telegram_id=None):
@@ -178,12 +84,3 @@ class BotClientViewSet(viewsets.ModelViewSet):
                 {'error': 'Foydalanuvchi topilmadi'},
                 status=status.HTTP_404_NOT_FOUND
             )
-
-
-class BotClientPublicViewSet(viewsets.ReadOnlyModelViewSet):
-    """Ommaviy API (faqat o'qish uchun)"""
-    queryset = BotClient.objects.filter(is_active=True, is_banned=False)
-    serializer_class = BotClientListSerializer
-    permission_classes = [AllowAny]
-    filter_backends = [SearchFilter]
-    search_fields = ['full_name', 'username']

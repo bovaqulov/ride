@@ -3,36 +3,41 @@ from django.utils.html import format_html
 
 from .models import (
     BotClient, PassengerTravel, PassengerPost,
-    Driver, Car, DriverTransaction, City
+    Driver, Car, DriverTransaction, City, Order, Passenger
 )
 
 
 @admin.register(BotClient)
 class BotClientAdmin(admin.ModelAdmin):
-    list_display = ("id", "full_name", "username", "phone", "language", "is_active", "is_banned", "total_rides", "rating", "created_at")
-    list_filter = ("is_active", "is_banned", "language", "created_at")
-    search_fields = ("full_name", "username", "phone", "telegram_id")
-    list_editable = ("is_active", "is_banned", "rating")
+    list_display = ("id", "full_name", "username", "language", "is_banned", "created_at")
+    list_filter = ("is_banned", "language", "created_at")
+    search_fields = ("full_name", "username", "telegram_id")
+    list_editable = ("is_banned",)
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
 
 
 @admin.register(PassengerTravel)
 class PassengerTravelAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "from_location", "to_location", "travel_class", "passenger", "price", "has_woman", "status", "created_at")
-    list_filter = ("travel_class", "status", "has_woman", "created_at")
-    search_fields = ("from_location", "to_location", "user")
-    list_editable = ("status", "price", "travel_class")
-    readonly_fields = ("created_at", "updated_at")
-    ordering = ("-created_at",)
+    list_display = [
+        'id',
+        'user',
+        'rate',
+        'price',
+        'created_at'
+    ]
+
+    list_filter = ['travel_class', 'has_woman', 'created_at']
+    search_fields = ['user', ]
+    readonly_fields = ['created_at', 'updated_at']
 
 
 @admin.register(PassengerPost)
 class PassengerPostAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "from_location", "to_location", "price", "status", "created_at")
-    list_filter = ("status", "created_at")
+    list_display = ("id", "user", "from_location", "to_location", "price", "created_at")
+    list_filter = ("created_at",)
     search_fields = ("from_location", "to_location", "user")
-    list_editable = ("price", "status")
+    list_editable = ("price",)
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
 
@@ -51,37 +56,16 @@ class DriverTransactionInline(admin.TabularInline):
 
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
-    list_display = ("id", "telegram_id", "from_location", "to_location", "status", "amount", "created_at")
-    list_filter = ("status", "created_at")
+    list_display = ("id", "telegram_id", "from_location", "to_location", "amount", "created_at")
+    list_filter = ("created_at",)
     search_fields = ("telegram_id", "from_location", "to_location")
-    list_editable = ("status", "amount")
+    list_editable = ("amount",)
     inlines = [CarInline, DriverTransactionInline]
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
 
 
-# @admin.register(Car)
-# class CarAdmin(admin.ModelAdmin):
-#     list_display = ("id", "driver", "car_number", "car_model", "car_color", "created_at")
-#     search_fields = ("car_number", "car_model", "driver__user")
-#     list_filter = ("car_color", "created_at")
-#     readonly_fields = ("created_at", "updated_at")
-#     ordering = ("-created_at",)
-#
-#
-# @admin.register(DriverTransaction)
-# class DriverTransactionAdmin(admin.ModelAdmin):
-#     list_display = ("id", "driver", "amount", "created_at")
-#     search_fields = ("driver__user",)
-#     list_filter = ("created_at",)
-#     readonly_fields = ("created_at",)
-#     ordering = ("-created_at",)
-
-
-
-
 class CityAdmin(admin.ModelAdmin):
-
     list_display = [
         'title',
         'subcategory',
@@ -240,5 +224,137 @@ class CityAdminWithInline(CityAdmin):
 # Admin ga ro'yxatdan o'tkazish
 admin.site.register(City, CityAdminWithInline)
 
-# Yoki oddiy versiyani ishlatish uchun:
-# admin.site.register(City, CityAdmin)
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    # Ro'yxatda ko'rsatiladigan maydonlar
+    list_display = [
+        'id',
+        'user',
+        'order_type',
+        'status',
+        'driver',
+        'content_type',
+        'object_id',
+        'created_at'
+    ]
+
+    # Filter panel
+    list_filter = [
+        'status',
+        'order_type',
+        'created_at',
+        'driver'
+    ]
+
+    # Qidiruv maydonlari
+    search_fields = [
+        'user',
+        'driver__name',
+        'driver__phone'
+    ]
+
+    # Readonly maydonlar
+    readonly_fields = [
+        'created_at',
+        'updated_at'
+    ]
+
+    # Sahifadagi elementlar soni
+    list_per_page = 20
+
+    # Sana bo'yicha guruhlash
+    date_hierarchy = 'created_at'
+
+
+    # Actionlar
+    actions = ['make_completed', 'make_cancelled']
+
+    def make_completed(self, request, queryset):
+        """Tanlangan orderlarni completed qilish"""
+        updated = queryset.update(status='completed')
+        self.message_user(request, f'{updated} ta order completed holatiga o\'zgartirildi')
+
+    make_completed.short_description = "Tanlangan orderlarni completed qilish"
+
+    def make_cancelled(self, request, queryset):
+        """Tanlangan orderlarni cancelled qilish"""
+        updated = queryset.update(status='cancelled')
+        self.message_user(request, f'{updated} ta order cancelled holatiga o\'zgartirildi')
+
+    make_cancelled.short_description = "Tanlangan orderlarni cancelled qilish"
+
+
+@admin.register(Passenger)
+class PassengerAdmin(admin.ModelAdmin):
+    # Ro'yxat ko'rinishidagi ustunlar
+    list_display = [
+        'id',
+        'telegram_id',
+        'full_name',
+        'phone',
+        'total_rides',
+        'rating',
+        'created_at'
+    ]
+
+    # Filtrlar
+    list_filter = [
+        'rating',
+        'created_at',
+        'updated_at'
+    ]
+
+    # Qidiruv maydonlari
+    search_fields = [
+        'telegram_id',
+        'full_name',
+        'phone'
+    ]
+
+    # Tartiblash
+    ordering = ['-rating']
+
+    # Faqat o'qish uchun maydonlar
+    readonly_fields = [
+        'created_at',
+        'updated_at'
+    ]
+
+    # Maydonlar guruhlari
+    fieldsets = (
+        ('Asosiy maʼlumotlar', {
+            'fields': (
+                'telegram_id',
+                'full_name',
+                'phone'
+            )
+        }),
+        ('Statistika', {
+            'fields': (
+                'total_rides',
+                'rating'
+            )
+        }),
+        ('Qo\'shimcha maʼlumotlar', {
+            'fields': (
+                'created_at',
+                'updated_at'
+            ),
+            'classes': ('collapse',)  # Yig'iladigan blok
+        }),
+    )
+
+    # Admin panelda ko'rsatiladigan sarlavha
+    list_display_links = ['telegram_id', 'full_name']
+
+    # Sahifadagi elementlar soni
+    list_per_page = 20
+
+    def get_readonly_fields(self, request, obj=None):
+        """Yangi yaratishda telegram_id ni o'zgartirish mumkin, mavjud bo'lsa yo'q"""
+        if obj:  # object mavjud bo'lsa (yangilash)
+            return ['telegram_id', 'created_at', 'updated_at']
+        else:  # yangi yaratish
+            return ['created_at', 'updated_at']
+

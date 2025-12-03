@@ -5,9 +5,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Sum
-from ..models import DriverStatus
-from ..serializers.driver import *
-from ..filters.driver_filter import DriverFilter, CarFilter, DriverTransactionFilter
+from ..models import DriverStatus, Driver, DriverTransaction
+from ..serializers.driver import DriverSerializer, DriverListSerializer, DriverUpdateSerializer, DriverTransactionSerializer
+from ..filters.driver_filter import DriverFilter, DriverTransactionFilter
 
 
 class DriverViewSet(viewsets.ModelViewSet):
@@ -26,15 +26,10 @@ class DriverViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list':
             return DriverListSerializer
+        elif self.action in ['update', 'partial_update']:
+            return DriverUpdateSerializer
         return DriverSerializer
 
-    @action(detail=True, methods=['get'])
-    def cars(self, request, pk=None):
-        """Driverning mashinalarini olish"""
-        driver = self.get_object()
-        cars = driver.cars.all()
-        serializer = CarSerializer(cars, many=True)
-        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def by_telegram_id(self, request):
@@ -97,34 +92,6 @@ class DriverViewSet(viewsets.ModelViewSet):
 
         serializer = DriverListSerializer(drivers, many=True)
         return Response(serializer.data)
-
-
-class CarViewSet(viewsets.ModelViewSet):
-    """
-    Mashinalar uchun ViewSet
-    """
-    queryset = Car.objects.all().select_related('driver')
-    serializer_class = CarSerializer
-    permission_classes = [IsAuthenticated]
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_class = CarFilter
-    search_fields = ['car_number', 'car_model', 'car_color']
-
-    @action(detail=False, methods=['get'])
-    def by_driver(self, request):
-        """Driver ID bo'yicha mashinalarni olish"""
-        driver_id = request.query_params.get('driver_id')
-
-        if not driver_id:
-            return Response(
-                {'error': 'driver_id parameter is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        cars = Car.objects.filter(driver_id=driver_id)
-        serializer = self.get_serializer(cars, many=True)
-        return Response(serializer.data)
-
 
 class DriverTransactionViewSet(viewsets.ModelViewSet):
     """

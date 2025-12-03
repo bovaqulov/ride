@@ -84,7 +84,7 @@ async def aget_place_from_coords(lat: float, lon: float) -> Dict[str, Any]:
         }
 
 
-async def aget_coords_from_place(place_name: str, accept_language: str = "uz", limit: int = 1) -> List[Dict[str, Any]]:
+async def aget_coords_from_place(place_name: str, country_code, accept_language: str = "uz", limit: int = 1) -> List[Dict[str, Any]]:
     """
     Shahar/tuman nomi orqali koordinatalarni olish
     """
@@ -93,7 +93,7 @@ async def aget_coords_from_place(place_name: str, accept_language: str = "uz", l
         "format": "jsonv2",
         "addressdetails": 1,
         "limit": limit,
-        "countrycodes": "uz",
+        "countrycodes": country_code,
         "accept-language": accept_language,
     }
 

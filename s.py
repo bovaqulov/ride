@@ -1,55 +1,75 @@
 import hashlib
 import requests
 
-user = "095511"  # Sizning account raqamingiz
-secret = "0.wnze0f2qrfk"  # Integration secret key
+# =====================
+# 1️⃣ SIPUNI ma'lumotlari
+# =====================
+user = '095511'  # SIPUNI akkaunt raqami
+secret = '0.wnze0f2qrfk'
 
-def make_call(phone_from, phone_to, sipnumber, sipnumber2):
-    url = "https://sipuni.com/api/callback/call_external"
+# =====================
+# 2️⃣ Qo'ng'iroq ma'lumotlari
+# =====================
+phone_from_client = '998330667378'  # Mijoz 1
+office_sipnumber = '204'      # Ofis telefoni
+phone_to_client = '998912798223'   # Mijoz 2
 
+# =====================
+# 3️⃣ Oldindan yaratilgan call_tree sxema ID si
+# =====================
+# SIPUNI panelida yaratgan sxemangiz: Mijoz1 → Ofis → Mijoz2
+tree_id = '3824685'
 
-    # Hash string yaratamiz
-    hash_string = f"{phone_from}+{phone_to}+{sipnumber}+{sipnumber2}+{user}+{secret}"
-    hash_md5 = hashlib.md5(hash_string.encode()).hexdigest()
+reverse = '0'             # 0 - qo'ng'iroq birinchi mijozga boradi
+call_attempt_time = 35    # maksimal urinish vaqti (sekund)
 
-    payload = {
-        "phoneFrom": phone_from,
-        "phoneTo": phone_to,
-        "sipnumber": sipnumber,
-        "sipnumber2": sipnumber2,
-        "user": user,
-        "hash": hash_md5
-    }
+# =====================
+# 4️⃣ Hash hosil qilish
+# =====================
+hash_string = '+'.join([
+    str(call_attempt_time),
+    phone_from_client,
+    reverse,
+    office_sipnumber,
+    tree_id,
+    user,
+    secret
+])
+hash_md5 = hashlib.md5(hash_string.encode()).hexdigest()
 
-    response = requests.post(url, data=payload)
-    return response.json()
+# =====================
+# 5️⃣ API so'rov yuborish
+# =====================
+url = 'https://sipuni.com/api/callback/call_tree'
+data = {
+    'callAttemptTime': call_attempt_time,
+    'phone': phone_from_client,
+    'reverse': reverse,
+    'sipnumber': office_sipnumber,
+    'tree': tree_id,
+    'user': user,
+    'hash': hash_md5
+}
 
-CALLBACK_CANCEL_URL = "https://sipuni.com/api/callback/cancel"
+response = requests.post(url, data=data)
+result = response.json()
 
-def cancel_call(call_id: str):
-    # hash yaratish: callbackId + user + secret
-    hash_string = f"{call_id}+{user}+{secret}"
-    hash_md5 = hashlib.md5(hash_string.encode('utf-8')).hexdigest()
+print("API javobi:", result)
 
-    payload = {
-        "callbackId": call_id,
-        "user": user,
-        "hash": hash_md5
-    }
+# =====================
+# 6️⃣ CallbackId ni olish va keyin kerak bo'lsa bekor qilish
+# # =====================
+# callback_id = result.get('callbackId')
 
-    r = requests.post(CALLBACK_CANCEL_URL, data=payload)
-    return r.json()
-
-
-
-
-# TEST CALL (Misol sifatida)
-if __name__ == "__main__":
-    # result = make_call(
-    #     phone_from="998912798223",   # passenger real number
-    #     phone_to="998330667378",     # driver real number
-    #     sipnumber="204",          # SIP internal number 1
-    #     sipnumber2="204"          # SIP internal number 2 (shu bilan ham bo'ladi)
-    # )
-    result = cancel_call("68c50bab633c2f2aa761b9b49283a55")
-    print("Natija:", result)
+# if callback_id:
+#     print("CallbackId:", callback_id)
+#
+#     # Misol uchun: qo'ng'iroqni bekor qilish
+#     hash_cancel = hashlib.md5(f"{callback_id}+{user}+{secret}".encode()).hexdigest()
+#     cancel_url = 'https://sipuni.com/api/callback/cancel'
+#     cancel_response = requests.post(cancel_url, data={
+#         'callbackId': callback_id,
+#         'user': user,
+#         'hash': hash_cancel
+#     })
+#     print("Bekor qilish javobi:", cancel_response.json())

@@ -1,29 +1,48 @@
-# serializers.py
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
-from ..models import PassengerTravel, TravelClass, TravelStatus
+from ..models import PassengerTravel, Order
 
 
 class PassengerTravelSerializer(serializers.ModelSerializer):
-    user = serializers.IntegerField()
-    from_location = serializers.CharField(max_length=200)
-    to_location = serializers.CharField(max_length=200)
-    travel_class = serializers.ChoiceField(choices=TravelClass.choices)
-    passenger = serializers.IntegerField(min_value=1, max_value=10)
-    price = serializers.IntegerField(min_value=0)
-    has_woman = serializers.BooleanField(default=False)
-    status = serializers.ChoiceField(choices=TravelStatus.choices, required=False)
+    from_city = serializers.SerializerMethodField()
+    to_city = serializers.SerializerMethodField()
+    order_id = serializers.SerializerMethodField()
 
     class Meta:
         model = PassengerTravel
         fields = [
-            'id', 'user', 'from_location', 'to_location',
-            'travel_class', 'passenger', 'price', 'has_woman',
-            'status', 'created_at', 'updated_at'
+            'id', 'user', 'order_id', 'rate', 'from_location', 'to_location',
+            'from_city', 'to_city', 'travel_class', 'passenger',
+            'price', 'has_woman', "created_at"
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
 
+        read_only_fields = ['id']
+
+    def get_from_city(self, obj):
+        """from_location dan city nomini olish"""
+        if isinstance(obj.from_location, dict):
+            return obj.from_location.get('city')
+        return None
+
+    def get_to_city(self, obj):
+        """to_location dan city nomini olish"""
+        if isinstance(obj.to_location, dict):
+            return obj.to_location.get('city')
+        return None
+
+    def get_order_id(self, obj):
+        """Get order_id after object is created"""
+        try:
+            order = Order.objects.filter(
+                content_type=ContentType.objects.get_for_model(obj),
+                object_id=obj.id
+            ).first()
+            return order.pk if order else None
+        except Order.DoesNotExist:
+            return None
 
 class PassengerTravelCreateSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = PassengerTravel
         fields = [
@@ -31,11 +50,19 @@ class PassengerTravelCreateSerializer(serializers.ModelSerializer):
             'passenger', 'price', 'has_woman'
         ]
 
+    def validate_from_location(self, value):
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("from_location must be a JSON object")
+        return value
+
+    def validate_to_location(self, value):
+        if not isinstance(value, dict):
+            raise serializers.ValidationError("to_location must be a JSON object")
+        return value
 
 class PassengerTravelUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PassengerTravel
         fields = [
-            'user', 'from_location', 'to_location', 'travel_class',
-            'passenger', 'price', 'has_woman', 'status'
+            'rate', 'travel_class', 'passenger', 'price', 'has_woman'
         ]

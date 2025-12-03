@@ -1,0 +1,73 @@
+from typing import List
+
+import dj_database_url
+from pydantic_settings import BaseSettings
+
+
+class EventSettings(BaseSettings):
+    # debug
+    DEBUG: bool = True
+    # secret
+    SECRET_KEY: str
+    # db url
+    DEMO_DB_URL: str = "sqlite:///db.sqlite3"
+    DEPLOY_DB_URL: str
+    # default api url
+    DEFAULT_API_URL: str
+    # celery
+    CELERY_BROKER_URL_DEMO: str = 'redis://localhost:6379/1'
+    CELERY_RESULT_BACKEND_DEMO: str = 'redis://localhost:6379/1'
+    CELERY_BROKER_URL_DEPLOY: str
+    CELERY_RESULT_BACKEND_DEPLOY: str
+
+    PASSENGER_BOT_URL: str
+    DRIVER_BOT_URL: str
+
+    class Config:
+        env_file = ".env"
+
+    @property
+    def CELERY_BROKER_URL(self):
+        return self.CELERY_BROKER_URL_DEMO if self.DEBUG  else self.CELERY_BROKER_URL_DEPLOY
+
+    @property
+    def CELERY_RESULT_BACKEND(self):
+        return self.CELERY_RESULT_BACKEND_DEMO if self.DEBUG else self.CELERY_RESULT_BACKEND_DEPLOY
+
+    @property
+    def ALLOWED_HOSTS(self) -> List[str]:
+        return [
+            '127.0.0.1',
+            "0.0.0.0",
+            "ride-production-89bb.up.railway.app"
+        ]
+
+    @property
+    def DB_URL(self) -> str:
+        return self.DEMO_DB_URL if self.DEBUG else self.DEPLOY_DB_URL
+
+    @property
+    def init_database(self):
+        return {
+            'default': dj_database_url.config(
+                default=self.DB_URL,
+                conn_max_age=600,
+                ssl_require=False
+            )
+        }
+
+    @property
+    def PASSENGER_URL(self) -> str:
+        return self.PASSENGER_BOT_URL if self.DEBUG else "http://localhost:8888/"
+
+    @property
+    def DRIVER_URL(self):
+        return self.DRIVER_BOT_URL if self.DEBUG else "http://localhost:8080/"
+
+
+
+def en():
+    return EventSettings()
+
+
+env = en()

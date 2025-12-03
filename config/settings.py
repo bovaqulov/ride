@@ -1,48 +1,64 @@
-"""
-Django settings for config project.
-"""
+# TODO IMPORTS
+import logging
+from pathlib import Path
+import dotenv
 import os
 
-from pathlib import Path
+from configuration import env
 
-import dj_database_url
-import dotenv
+# TODO INITIALIZATION
 
 dotenv.load_dotenv()
+logger = logging.Logger(__name__)
 
+# TODO ALLOW HOSTS
+
+ALLOWED_HOSTS = env.ALLOWED_HOSTS
+
+# TODO BASE_DIR
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-pvbql8bi=baoyahjqvx7r!^w!1aa!&$mdg%_^jc3cx1=@ss$ia'
-DEBUG = os.environ.get('DEBUG', True)
-ALLOWED_HOSTS = [
-    '127.0.0.1',
-    "0.0.0.0",
-    "ride-production-89bb.up.railway.app"
+# TODO SECRET_KEY
+
+SECRET_KEY = env.SECRET_KEY
+
+# TODO DEBUG
+
+DEBUG = env.DEBUG
+
+# TODO APPLICATION DEFINITION
+
+LOCAL_APPS = [
+    'bot_app'
 ]
 
-# Application definition
-INSTALLED_APPS = [
+THIRD_PARTY_APPS = [
+    "corsheaders",
+    'rest_framework',
+    'rest_framework.authtoken',
+    'django_filters',
+    'drf_yasg',
+]
+
+DJANGO_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # Third party apps
-    "corsheaders",
-    'rest_framework',
-    'rest_framework.authtoken',
-    'django_filters',
-    'drf_yasg',  # coreapi o'rniga
-
-    # Local apps
-    'bot_app',
 ]
 
-MIDDLEWARE = [
+INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
+# TODO MIDDLEWARE
+
+CORS_HEADERS = [
     "corsheaders.middleware.CorsMiddleware",
+]
+
+MIDDLEWARE = CORS_HEADERS + [
     'django.middleware.security.SecurityMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -73,15 +89,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-DATABASES = {
-    'default': dj_database_url.config(
-        default="postgresql://postgres:KfXSxCytxDoCpmnwwnkobIKtPjvOuiyL@shortline.proxy.rlwy.net:14241/railway",
-        conn_max_age=600,
-        ssl_require=False
-    )
-}
-
-
+DATABASES = env.init_database
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -123,7 +131,7 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
 
     # Default format
-    'DATETIME_FORMAT': '%Y-%m-%d %H:%M:%S',
+    'DATETIME_FORMAT': '%Y-%m-%dT%H:%M:%S.%fZ',
     'DATE_FORMAT': '%Y-%m-%d',
     'TIME_FORMAT': '%H:%M:%S',
 }
@@ -160,12 +168,9 @@ STATICFILES_DIRS = [
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 REDOC_SETTINGS = {
     'LAZY_RENDERING': False,
 }
-
-
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -187,13 +192,8 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 
-# CELERY_BROKER_URL = 'redis://default:GCcEotAzxsPJAsyehxeImPDSTzpPISLX@metro.proxy.rlwy.net:50038'
-# CELERY_RESULT_BACKEND = 'redis://default:GCcEotAzxsPJAsyehxeImPDSTzpPISLX@metro.proxy.rlwy.net:50038'
-
-CELERY_BROKER_URL = 'redis://default:GCcEotAzxsPJAsyehxeImPDSTzpPISLX@metro.proxy.rlwy.net:50038'
-CELERY_RESULT_BACKEND = 'redis://default:GCcEotAzxsPJAsyehxeImPDSTzpPISLX@metro.proxy.rlwy.net:50038'
-
-
+CELERY_BROKER_URL = env.CELERY_BROKER_URL
+CELERY_RESULT_BACKEND = env.CELERY_RESULT_BACKEND
 
 SWAGGER_SETTINGS = {
     'DEFAULT_MODEL_RENDERING': 'example',
@@ -206,6 +206,19 @@ SWAGGER_SETTINGS = {
         }
     },
     'SUPPORTED_SUBMIT_METHODS': ['get', 'post', 'put', 'patch', 'delete'],
-    'DEFAULT_API_URL': 'https://ride-production-89bb.up.railway.app'
+    # 'DEFAULT_API_URL': env.DEFAULT_API_URL
 }
-
+# settings.py
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'DEBUG',  # DEBUG darajasidagi printlarni ko'rish
+    },
+}

@@ -1,4 +1,6 @@
+# apps.py
 from django.apps import AppConfig
+
 
 
 class BotAppConfig(AppConfig):
@@ -7,3 +9,4 @@ class BotAppConfig(AppConfig):
 
     def ready(self):
         import bot_app.signals
+        print("Signals imported")

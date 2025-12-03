@@ -1,4 +1,5 @@
 # views.py
+from asgiref.sync import async_to_sync, sync_to_async
 from django.db.models import Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -18,7 +19,6 @@ from ..serializers.city import (
     NearbyCitiesResponseSerializer
 )
 from ..services.location_service import GlobalLocationService
-from ..utils.nominatim_utils import get_place_from_coords_sync
 
 
 class CityViewSet(viewsets.ModelViewSet):
@@ -35,7 +35,12 @@ class CityViewSet(viewsets.ModelViewSet):
             return CityCreateSerializer
         return CitySerializer
 
-    async def create(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
+        """Sync wrapper for async create"""
+        return async_to_sync(self._async_create)(request, *args, **kwargs)
+
+    async def _async_create(self, request, *args, **kwargs):
+        """Async create logic"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -46,7 +51,6 @@ class CityViewSet(viewsets.ModelViewSet):
         skip_validation = request.data.get('skip_location_validation', False)
 
         if latitude and longitude and city_title and not skip_validation:
-            # Shahar nomi va koordinatalar mos kelishini tekshirish
             validation_result = await GlobalLocationService.validate_city_location(
                 city_title, latitude, longitude
             )
@@ -58,18 +62,20 @@ class CityViewSet(viewsets.ModelViewSet):
                     "details": validation_result
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-        city = serializer.save()
-
-        # Response uchun oddiy serializer ishlatamiz
+        city = await sync_to_async(serializer.save)()
         response_serializer = CitySerializer(city)
         return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
-    async def update(self, request, *args, **kwargs):
-        instance = self.get_object()
+    def update(self, request, *args, **kwargs):
+        """Sync wrapper for async update"""
+        return async_to_sync(self._async_update)(request, *args, **kwargs)
+
+    async def _async_update(self, request, *args, **kwargs):
+        """Async update logic"""
+        instance = await sync_to_async(self.get_object)()
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        # Location tekshiruvi
         latitude = request.data.get('latitude')
         longitude = request.data.get('longitude')
         city_title = request.data.get('title', instance.title)
@@ -87,16 +93,17 @@ class CityViewSet(viewsets.ModelViewSet):
                     "details": validation_result
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-        city = serializer.save()
+        city = await sync_to_async(serializer.save)()
         response_serializer = CitySerializer(city)
         return Response(response_serializer.data)
 
-    # views.py (davomi)
     @action(detail=False, methods=['post'], url_path='check-location')
-    async def check_location(self, request):
-        """
-        Koordinatalar shahar hududida ekanligini tekshirish
-        """
+    def check_location(self, request):
+        """Sync wrapper for async check_location"""
+        return async_to_sync(self._async_check_location)(request)
+
+    async def _async_check_location(self, request):
+        """Koordinatalar shahar hududida ekanligini tekshirish"""
         serializer = LocationCheckSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -104,7 +111,6 @@ class CityViewSet(viewsets.ModelViewSet):
         lon = serializer.validated_data['longitude']
         max_distance = serializer.validated_data['max_distance_km']
 
-        # Shaharni topish
         city, distance, address_info = await GlobalLocationService.find_city_for_location(
             lat, lon, max_distance
         )
@@ -119,7 +125,6 @@ class CityViewSet(viewsets.ModelViewSet):
                 "match_type": "exact"
             }
         else:
-            # Yaqin shaharlarni qidirish
             nearby_cities = await GlobalLocationService.search_cities_by_location(lat, lon, max_distance)
             if nearby_cities:
                 nearest_city = nearby_cities[0]
@@ -143,10 +148,12 @@ class CityViewSet(viewsets.ModelViewSet):
         return Response(response_serializer.data)
 
     @action(detail=False, methods=['post'], url_path='validate-city-location')
-    async def validate_city_location(self, request):
-        """
-        Shahar nomi va koordinatalar mos kelishini tekshirish
-        """
+    def validate_city_location(self, request):
+        """Sync wrapper for async validate_city_location"""
+        return async_to_sync(self._async_validate_city_location)(request)
+
+    async def _async_validate_city_location(self, request):
+        """Shahar nomi va koordinatalar mos kelishini tekshirish"""
         serializer = CityValidationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -160,10 +167,12 @@ class CityViewSet(viewsets.ModelViewSet):
         return Response(response_serializer.data)
 
     @action(detail=False, methods=['post'], url_path='nearby-cities')
-    async def nearby_cities(self, request):
-        """
-        Berilgan lokatsiya atrofidagi shaharlarni topish
-        """
+    def nearby_cities(self, request):
+        """Sync wrapper for async nearby_cities"""
+        return async_to_sync(self._async_nearby_cities)(request)
+
+    async def _async_nearby_cities(self, request):
+        """Berilgan lokatsiya atrofidagi shaharlarni topish"""
         serializer = LocationCheckSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -186,11 +195,13 @@ class CityViewSet(viewsets.ModelViewSet):
         return Response(response_serializer.data)
 
     @action(detail=True, methods=['get'], url_path='location-info')
-    async def get_city_location_info(self, request, pk=None):
-        """
-        Shahar uchun lokatsiya ma'lumotlarini olish
-        """
-        city = self.get_object()
+    def get_city_location_info(self, request, pk=None):
+        """Sync wrapper for async get_city_location_info"""
+        return async_to_sync(self._async_get_city_location_info)(request, pk)
+
+    async def _async_get_city_location_info(self, request, pk=None):
+        """Shahar uchun lokatsiya ma'lumotlarini olish"""
+        city = await sync_to_async(self.get_object)()
 
         city_coords = await GlobalLocationService.get_city_coordinates(city.title)
         if not city_coords:
@@ -198,7 +209,10 @@ class CityViewSet(viewsets.ModelViewSet):
                 "error": "Shahar uchun lokatsiya ma'lumotlari topilmadi"
             }, status=status.HTTP_404_NOT_FOUND)
 
-        address_info = get_place_from_coords_sync(city_coords[0], city_coords[1])
+        # get_place_from_coords_sync ichida asyncio.run() bor, shuning uchun uni
+        # to'g'ridan-to'g'ri aget_place_from_coords bilan almashtirish kerak
+        from ..utils.nominatim_utils import aget_place_from_coords
+        address_info = await aget_place_from_coords(city_coords[0], city_coords[1])
 
         return Response({
             "city": CitySerializer(city).data,
@@ -210,22 +224,27 @@ class CityViewSet(viewsets.ModelViewSet):
         })
 
     @action(detail=False, methods=['get'], url_path='search-by-name')
-    async def search_cities_by_name(self, request):
-        """
-        Shahar nomi bo'yicha qidirish va koordinatalarni olish
-        """
+    def search_cities_by_name(self, request):
+        """Sync wrapper for async search_cities_by_name"""
+        return async_to_sync(self._async_search_cities_by_name)(request)
+
+    async def _async_search_cities_by_name(self, request):
+        """Shahar nomi bo'yicha qidirish va koordinatalarni olish"""
         city_name = request.query_params.get('name')
         if not city_name:
             return Response({
                 "error": "name parametri talab qilinadi"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Database dan shaharlarni qidirish
-        cities = City.objects.filter(
-            Q(title__icontains=city_name) |
-            Q(title__iexact=city_name),
-            is_allowed=True
-        )
+        @sync_to_async
+        def get_cities():
+            return list(City.objects.filter(
+                Q(title__icontains=city_name) |
+                Q(title__iexact=city_name),
+                is_allowed=True
+            ))
+
+        cities = await get_cities()
 
         results = []
         for city in cities:
