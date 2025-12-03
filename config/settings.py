@@ -206,7 +206,7 @@ SWAGGER_SETTINGS = {
         }
     },
     'SUPPORTED_SUBMIT_METHODS': ['get', 'post', 'put', 'patch', 'delete'],
-    'DEFAULT_API_URL': env.str("DEFAULT_API_URL")
+    'DEFAULT_API_URL': env.DEFAULT_API_URL
 }
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
