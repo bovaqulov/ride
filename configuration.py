@@ -11,14 +11,13 @@ class EventSettings(BaseSettings):
     SECRET_KEY: str
     # db url
     DEMO_DB_URL: str = "sqlite:///db.sqlite3"
-    DEPLOY_DB_URL: str
+    DATABASE_PUBLIC_URL: str
     # default api url
     DEFAULT_API_URL: str
     # celery
     CELERY_BROKER_URL_DEMO: str = 'redis://localhost:6379/1'
     CELERY_RESULT_BACKEND_DEMO: str = 'redis://localhost:6379/1'
-    CELERY_BROKER_URL_DEPLOY: str
-    CELERY_RESULT_BACKEND_DEPLOY: str
+    REDIS_PUBLIC_URL: str
 
     PASSENGER_BOT_URL: str
     DRIVER_BOT_URL: str
@@ -28,11 +27,11 @@ class EventSettings(BaseSettings):
 
     @property
     def CELERY_BROKER_URL(self):
-        return self.CELERY_BROKER_URL_DEMO if self.DEBUG  else self.CELERY_BROKER_URL_DEPLOY
+        return self.CELERY_BROKER_URL_DEMO if self.DEBUG  else self.REDIS_PUBLIC_URL
 
     @property
     def CELERY_RESULT_BACKEND(self):
-        return self.CELERY_RESULT_BACKEND_DEMO if self.DEBUG else self.CELERY_RESULT_BACKEND_DEPLOY
+        return self.CELERY_RESULT_BACKEND_DEMO if self.DEBUG else self.REDIS_PUBLIC_URL
 
     @property
     def ALLOWED_HOSTS(self) -> List[str]:
@@ -44,7 +43,7 @@ class EventSettings(BaseSettings):
 
     @property
     def DB_URL(self) -> str:
-        return self.DEMO_DB_URL if self.DEBUG else self.DEPLOY_DB_URL
+        return self.DEMO_DB_URL if self.DEBUG else self.DATABASE_PUBLIC_URL
 
     @property
     def init_database(self):
