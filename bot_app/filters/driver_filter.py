@@ -1,7 +1,7 @@
 # bot_app/filters/driver_filter.py
 from django_filters import rest_framework as filters
-from django.db.models import Q
-from ..models import Driver, Car, DriverTransaction, DriverStatus, TravelClass
+from django.db.models import Q, OuterRef, Exists
+from ..models import Driver, Car, DriverTransaction, DriverStatus, TravelClass, Order, TravelStatus
 
 
 class DriverFilter(filters.FilterSet):
@@ -25,9 +25,12 @@ class DriverFilter(filters.FilterSet):
     location = filters.CharFilter(method='filter_by_location')
     car_class = filters.CharFilter(method='filter_by_car_class')
 
+    # Yangi filter: Faqat bo'sh driverlarni olish
+    exclude_busy = filters.BooleanFilter(method='filter_exclude_busy', label="Exclude busy drivers")
+
     class Meta:
         model = Driver
-        fields = ['status', 'from_location', 'to_location']
+        fields = ['status', 'from_location', 'to_location', "exclude_busy"]
 
     def filter_by_location(self, queryset, name, value):
         return queryset.filter(
@@ -39,6 +42,30 @@ class DriverFilter(filters.FilterSet):
         return queryset.filter(
             Q(driver__car_class=value)
         )
+
+    def filter_exclude_busy(self, queryset, name, value):
+        """Faol orderi bor driverlarni chiqarib tashlash"""
+        if value:
+            # Faol order statuslari
+            active_statuses = [
+                TravelStatus.CREATED,
+                TravelStatus.ASSIGNED,
+                TravelStatus.ARRIVED,
+                TravelStatus.STARTED
+            ]
+
+            # Subquery: Driverning faol orderi bormi?
+            has_active_order = Order.objects.filter(
+                driver=OuterRef('pk'),
+                status__in=active_statuses
+            )
+
+            # Faqat faol orderi bo'lmagan driverlarni olish
+            queryset = queryset.annotate(
+                has_active_order=Exists(has_active_order)
+            ).filter(has_active_order=False)
+
+        return queryset
 
 
 class CarFilter(filters.FilterSet):

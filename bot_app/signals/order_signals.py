@@ -13,7 +13,7 @@ def create_order(sender, instance: Order, created,  **kwargs):
 
 @receiver(pre_save, sender=Order)
 def update_order(sender, instance: Order, **kwargs):
-    print(instance.status)
+
     if instance.driver:
         if instance.status == TravelStatus.CREATED:
             instance.status = TravelStatus.ASSIGNED

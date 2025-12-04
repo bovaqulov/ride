@@ -34,6 +34,7 @@ LOCAL_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    "django_lifecycle_checks",
     "corsheaders",
     'rest_framework',
     'rest_framework.authtoken',

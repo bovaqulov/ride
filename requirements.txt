@@ -20,6 +20,7 @@ dj-database-url==3.0.1
 Django==5.2.9
 django-cors-headers==4.9.0
 django-filter==25.2
+django-lifecycle==1.2.4
 django-stubs==5.2.8
 django-stubs-ext==5.2.8
 djangorestframework==3.16.1
