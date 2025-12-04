@@ -31,10 +31,11 @@ class DriverViewSet(viewsets.ModelViewSet):
         return DriverSerializer
 
 
-    @action(detail=False, methods=['get'])
-    def by_telegram_id(self, request):
+    @action(detail=False, methods=['get'], url_path='by-telegram-id/(?P<telegram_id>[^/.]+)')
+    def by_telegram_id(self, request, telegram_id=None):
         """Telegram ID bo'yicha driver qidirish"""
-        telegram_id = request.query_params.get('telegram_id')
+        driver =  Driver.objects.get(telegram_id=telegram_id)
+        return Response(DriverSerializer(driver).data)
 
         if not telegram_id:
             return Response(
