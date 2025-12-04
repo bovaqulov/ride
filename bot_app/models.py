@@ -126,7 +126,6 @@ class Driver(models.Model):
     total_rides = models.IntegerField(default=0)
     phone = models.CharField(max_length=50, unique=True, null=True, blank=True)
     rating = models.IntegerField(default=5)
-    profile_image = models.ImageField(null=True, blank=True, upload_to="profile_image/")
     from_location = models.CharField(max_length=200)
     to_location = models.CharField(max_length=200)
     status = models.CharField(max_length=10, choices=DriverStatus.choices, default=DriverStatus.OFFLINE)
@@ -141,6 +140,10 @@ class Driver(models.Model):
         ordering = ['-created_at']
         verbose_name_plural = "Haydovchilar"
         verbose_name = "Haydovchi"
+
+class DriverGallery(models.Model):
+    telegram_id = models.OneToOneField(Driver, on_delete=models.CASCADE)
+    profile_image = models.ImageField(null=True, blank=True, upload_to="profile_image/")
 
 
 class Car(models.Model):

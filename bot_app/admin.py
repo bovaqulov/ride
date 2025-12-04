@@ -3,7 +3,7 @@ from django.utils.html import format_html
 
 from .models import (
     BotClient, PassengerTravel, PassengerPost,
-    Driver, Car, DriverTransaction, City, Order, Passenger
+    Driver, Car, DriverTransaction, City, Order, Passenger, DriverGallery
 )
 
 
@@ -53,6 +53,13 @@ class DriverTransactionInline(admin.TabularInline):
     extra = 1
     readonly_fields = ("created_at",)
 
+class DriverGalleryInline(admin.StackedInline):
+    """DriverGallery modelini Driver adminida inline ko'rinishda ko'rsatish"""
+    model = DriverGallery
+    can_delete = False
+    extra = 0
+    max_num = 1
+
 
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
@@ -60,7 +67,7 @@ class DriverAdmin(admin.ModelAdmin):
     list_filter = ("created_at",)
     search_fields = ("telegram_id", "from_location", "to_location")
     list_editable = ("amount",)
-    inlines = [CarInline, DriverTransactionInline]
+    inlines = [DriverGalleryInline, CarInline, DriverTransactionInline]
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
 
