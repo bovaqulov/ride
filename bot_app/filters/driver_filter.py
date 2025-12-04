@@ -10,6 +10,7 @@ class DriverFilter(filters.FilterSet):
     from_location = filters.CharFilter(lookup_expr='icontains')
     to_location = filters.CharFilter(lookup_expr='icontains')
     phone = filters.CharFilter(lookup_expr='icontains')
+    telegram_id = filters.CharFilter(lookup_expr='icontains')
 
     # Range filterlar
     min_amount = filters.NumberFilter(field_name='amount', lookup_expr='gte')
@@ -30,7 +31,7 @@ class DriverFilter(filters.FilterSet):
 
     class Meta:
         model = Driver
-        fields = ['status', 'from_location', 'to_location', "exclude_busy"]
+        fields = ['telegram_id', 'status', 'from_location', 'to_location', "exclude_busy"]
 
     def filter_by_location(self, queryset, name, value):
         return queryset.filter(
