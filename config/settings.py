@@ -226,3 +226,6 @@ LOGGING = {
         'level': 'DEBUG',  # DEBUG darajasidagi printlarni ko'rish
     },
 }
+
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = '/media/'
