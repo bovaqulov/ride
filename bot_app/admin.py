@@ -63,7 +63,7 @@ class DriverGalleryInline(admin.StackedInline):
 
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
-    list_display = ("id", "telegram_id", "from_location", "to_location", "profile_image", "amount", "created_at")
+    list_display = ("id", "telegram_id", "from_location", "to_location", "amount", "created_at")
     list_filter = ("created_at",)
     search_fields = ("telegram_id", "from_location", "to_location")
     list_editable = ("amount",)

@@ -89,7 +89,7 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-DATABASES = env.init_database
+DATABASES = env.DATABASES
 
 # REST Framework settings
 REST_FRAMEWORK = {

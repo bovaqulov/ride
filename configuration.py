@@ -11,7 +11,7 @@ class EventSettings(BaseSettings):
     SECRET_KEY: str
     # db url
     DEMO_DB_URL: str = "sqlite:///db.sqlite3"
-    DATABASE_PUBLIC_URL: str
+    DATABASE_PUBLIC_URL: str = "sqlite:///db.sqlite3"
     # default api url
     DEFAULT_API_URL: str
     # celery
@@ -45,8 +45,10 @@ class EventSettings(BaseSettings):
     def DB_URL(self) -> str:
         return self.DATABASE_PUBLIC_URL
 
+
     @property
-    def init_database(self):
+    def DATABASES(self):
+        """Django DATABASES sozlamasi"""
         return {
             'default': dj_database_url.config(
                 default=self.DB_URL,
