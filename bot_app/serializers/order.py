@@ -7,7 +7,7 @@ import json
 from .bot_client import BotClientSerializer
 from .driver import DriverSerializer
 from .passenger import PassengerSerializer
-from ..models import Order, PassengerTravel, PassengerPost, TravelStatus, OrderType, Driver, BotClient, Passenger
+from ..models import Order, PassengerTravel, PassengerPost, TravelStatus, OrderType, Driver, BotClient, Passenger, City
 
 
 class ContentObjectSerializer(serializers.Serializer):
