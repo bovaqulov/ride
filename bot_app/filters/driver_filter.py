@@ -1,6 +1,7 @@
 # bot_app/filters/driver_filter.py
+from django.db.models.functions import Coalesce
 from django_filters import rest_framework as filters
-from django.db.models import Q, OuterRef, Exists
+from django.db.models import Q, OuterRef, Exists, Subquery
 from ..models import Driver, Car, DriverTransaction, DriverStatus, TravelClass, Order, TravelStatus
 
 
@@ -45,7 +46,7 @@ class DriverFilter(filters.FilterSet):
         )
 
     def filter_exclude_busy(self, queryset, name, value):
-        """Faol orderi bor driverlarni chiqarib tashlash"""
+        """Faol orderlari 4 tadan ortiq bo'lgan driverlarni chiqarib tashlash"""
         if value:
             active_statuses = [
                 TravelStatus.CREATED,
@@ -54,17 +55,22 @@ class DriverFilter(filters.FilterSet):
                 TravelStatus.STARTED
             ]
 
-            has_active_order = Order.objects.filter(
+            # Faol orderlar sonini hisoblash
+            active_order_count = Order.objects.filter(
                 driver=OuterRef('pk'),
                 status__in=active_statuses
+            ).values('driver').annotate(
+                count=Count('id')
+            ).values('count')
+
+            # Faol orderlar sonini annotation qo'shish
+            queryset = queryset.annotate(
+                active_order_count=Coalesce(Subquery(active_order_count), 0)
+            ).filter(
+                active_order_count__lt=4  # 4 tadan kam bo'lgan driverlarni qaytarish
             )
 
-            queryset = queryset.annotate(
-                has_active_order=Exists(has_active_order)
-            ).filter(has_active_order=False)
-
         return queryset
-
 
 class CarFilter(filters.FilterSet):
     car_number = filters.CharFilter(lookup_expr='icontains')
