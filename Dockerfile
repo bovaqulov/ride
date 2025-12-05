@@ -20,9 +20,12 @@ RUN pip install -r requirements.txt
 # 6. Loyihani copy qilish
 COPY . .
 
+# 7. Create staticfiles directory
+RUN mkdir -p staticfiles
+
 EXPOSE 8000
 
-# 7. Django migrations va Gunicorn birlashtirilgan CMD
+# 8. Django migrations va Gunicorn birlashtirilgan CMD
 CMD sh -c "python manage.py makemigrations --noinput && \
     python manage.py migrate --noinput && \
     python manage.py createsuper && \
