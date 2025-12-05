@@ -213,7 +213,7 @@ class City(models.Model):
 
 
 class CityPrice(models.Model):
-    city = models.ForeignKey(City, on_delete=models.CASCADE)
+    city = models.OneToOneField(City, on_delete=models.CASCADE)
     economy = models.DecimalField(decimal_places=2, max_digits=10)
     comfort = models.DecimalField(decimal_places=2, max_digits=10)
     standard = models.DecimalField(decimal_places=2, max_digits=10)
@@ -235,7 +235,6 @@ class Order(models.Model):
     """
     Buyurtma modeli. Generic relation orqali turli xil obyektlarga bog'lanishi mumkin.
     """
-
     user = models.BigIntegerField()
     driver = models.ForeignKey('Driver', on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(max_length=10, choices=TravelStatus.choices, default=TravelStatus.CREATED)

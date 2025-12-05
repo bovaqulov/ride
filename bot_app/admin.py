@@ -72,6 +72,10 @@ class DriverAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
 
+class CityPriceInline(admin.TabularInline):
+    model = City
+    extra = 1
+
 class CityAdmin(admin.ModelAdmin):
     list_display = [
         'title',
@@ -81,6 +85,7 @@ class CityAdmin(admin.ModelAdmin):
         'updated_at',
         'actions_column'
     ]
+    inlines = [CityPriceInline]
     list_filter = [
         'is_allowed',
         'subcategory',

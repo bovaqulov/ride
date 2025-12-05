@@ -228,7 +228,7 @@ class DriverSerializer(serializers.ModelSerializer):
         """Driverning profile rasmini olish (relative path)"""
         try:
             gallery = DriverGallery.objects.get(telegram_id=obj)
-            return gallery.profile_image.url if gallery.profile_image else None
+            return gallery.profile_image.path if gallery.profile_image else None
         except DriverGallery.DoesNotExist:
             return None
 
@@ -239,7 +239,7 @@ class DriverSerializer(serializers.ModelSerializer):
             if gallery.profile_image:
                 request = self.context.get('request')
                 if request:
-                    return request.build_absolute_uri(gallery.profile_image.url)
+                    return request.build_absolute_uri(gallery.profile_image.path)
                 return gallery.profile_image.url
         except DriverGallery.DoesNotExist:
             pass

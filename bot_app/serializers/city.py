@@ -1,21 +1,34 @@
 # serializers.py
 from rest_framework import serializers
-from ..models import City
-from ..services.location_service import GlobalLocationService
+from rest_framework.fields import SerializerMethodField
+
+from ..models import City, CityPrice
 
 
 class CitySerializer(serializers.ModelSerializer):
     subcategory_title = serializers.CharField(source='subcategory.title', read_only=True)
     subcategory_id = serializers.IntegerField(source='subcategory.id', read_only=True)
+    price = SerializerMethodField()
 
     class Meta:
         model = City
         fields = [
-            'id', 'title', 'translate', 'subcategory', 'latitude', 'longitude', 'subcategory_title', 'subcategory_id',
+            'id', 'title', "price", 'translate', 'subcategory', 'latitude', 'longitude', 'subcategory_title', 'subcategory_id',
             'is_allowed', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
 
+    def get_price(self, obj):
+        city_price = CityPrice.objects.get(city=obj)
+        return CityPriceSerializer(city_price).data
+
+
+class CityPriceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CityPrice
+        fields = [
+            "economy", "comfort", "standard"
+        ]
 
 class CityCreateSerializer(serializers.ModelSerializer):
     latitude = serializers.FloatField(required=False, write_only=True)
