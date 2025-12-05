@@ -179,9 +179,11 @@ class Car(models.Model):
         ordering = ['-created_at']
 
 
+
 class DriverTransaction(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     amount = models.FloatField()
+    trans_type = models.CharField(max_length=200, choices=TravelClass.choices, default=TravelClass.ECONOMY)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

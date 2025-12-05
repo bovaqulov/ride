@@ -135,3 +135,28 @@ class DriverTransactionViewSet(viewsets.ModelViewSet):
                 {'error': 'Driver not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+    @action(methods=["patch"], detail=False, url_path='separation_amount/')
+    def separation_amount(self, request):
+        driver_id = request.query_params.get('driver_id')
+        price = request.query_params.get('price')
+        if not driver_id and not price:
+            return Response(
+                {'error': 'driver_id parameter is required'},
+            )
+        try:
+            driver = Driver.objects.get(id=driver_id)
+            driver.amount -= float(price)
+            driver.save()
+            return Response({
+                'driver': DriverSerializer(driver).data,
+
+            },
+            status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
