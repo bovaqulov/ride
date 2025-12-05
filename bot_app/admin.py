@@ -100,15 +100,6 @@ class CityAdmin(admin.ModelAdmin):
     list_select_related = ['subcategory']
     actions = ['make_allowed', 'make_not_allowed']
     readonly_fields = ['created_at', 'updated_at', 'subcategory_tree']
-    fieldsets = (
-        ('Asosiy maʼlumotlar', {
-            'fields': ('title', 'translate', "latitude", "longitude", 'subcategory', 'is_allowed')
-        }),
-        ('Qoʻshimcha maʼlumotlar', {
-            'fields': ('subcategory_tree', 'created_at', 'updated_at'),
-            'classes': ('collapse',)
-        }),
-    )
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
