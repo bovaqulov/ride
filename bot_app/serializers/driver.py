@@ -316,6 +316,7 @@ class DriverUpdateSerializer(serializers.ModelSerializer):
             "from_location",
             "to_location",
             "amount",
+            'status',
             "total_rides",
             "profile_image",  # Yangi qo'shildi
             "current_profile_image"  # Yangi qo'shildi
