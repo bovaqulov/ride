@@ -125,8 +125,8 @@ class Driver(models.Model):
     total_rides = models.IntegerField(default=0)
     phone = models.CharField(max_length=50, unique=True, null=True, blank=True)
     rating = models.IntegerField(default=5)
-    from_location = models.ForeignKey("City", on_delete=models.CASCADE)
-    to_location = models.ForeignKey("City", on_delete=models.CASCADE)
+    from_location = models.ForeignKey("City", on_delete=models.SET_NULL, null=True, blank=True)
+    to_location = models.ForeignKey("City", on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(max_length=10, choices=DriverStatus.choices, default=DriverStatus.OFFLINE)
     amount = models.IntegerField(default=150000)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -193,6 +193,20 @@ class City(models.Model):
         ordering = ['-created_at']
         verbose_name_plural = "Shaharlar"
         verbose_name = "Shahar"
+
+class CityPrice(models.Model):
+    city = models.ForeignKey(City, on_delete=models.CASCADE)
+    economy = models.DecimalField(decimal_places=2, max_digits=10)
+    comfort = models.DecimalField(decimal_places=2, max_digits=10)
+    standard = models.DecimalField(decimal_places=2, max_digits=10)
+
+    def __str__(self):
+        return self.city.title
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = "Shahar narxlari"
+        verbose_name = "Shahar narxlari"
 
 
 class OrderType(models.TextChoices):
