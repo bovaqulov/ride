@@ -6,8 +6,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from pydantic import BaseModel
 
-
 logger = logging.getLogger(__name__)
+
 
 class BotClient(models.Model):
     telegram_id = models.BigIntegerField(unique=True)
@@ -125,8 +125,24 @@ class Driver(models.Model):
     total_rides = models.IntegerField(default=0)
     phone = models.CharField(max_length=50, unique=True, null=True, blank=True)
     rating = models.IntegerField(default=5)
-    from_location = models.ForeignKey("City", on_delete=models.SET_NULL, null=True, blank=True)
-    to_location = models.ForeignKey("City", on_delete=models.SET_NULL, null=True, blank=True)
+    from_location = models.ForeignKey(
+        "City",
+        on_delete=models.CASCADE,
+        related_name='drivers_from',  # Add this
+        related_query_name='driver_from',  # Optional but recommended
+        default=None,  # Use None if you want to allow empty
+        null=True,  # Add this if default=None
+        blank=True
+    )
+    to_location = models.ForeignKey(
+        "City",
+        on_delete=models.CASCADE,
+        related_name='drivers_to',  # Add this
+        related_query_name='driver_to',  # Optional but recommended
+        default=None,  # Use None if you want to allow empty
+        null=True,  # Add this if default=None
+        blank=True
+    )
     status = models.CharField(max_length=10, choices=DriverStatus.choices, default=DriverStatus.OFFLINE)
     amount = models.IntegerField(default=150000)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -139,6 +155,7 @@ class Driver(models.Model):
         ordering = ['-created_at']
         verbose_name_plural = "Haydovchilar"
         verbose_name = "Haydovchi"
+
 
 class DriverGallery(models.Model):
     telegram_id = models.OneToOneField(Driver, on_delete=models.CASCADE)
@@ -194,6 +211,7 @@ class City(models.Model):
         verbose_name_plural = "Shaharlar"
         verbose_name = "Shahar"
 
+
 class CityPrice(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE)
     economy = models.DecimalField(decimal_places=2, max_digits=10)
@@ -204,7 +222,6 @@ class CityPrice(models.Model):
         return self.city.title
 
     class Meta:
-        ordering = ['-created_at']
         verbose_name_plural = "Shahar narxlari"
         verbose_name = "Shahar narxlari"
 
@@ -212,8 +229,6 @@ class CityPrice(models.Model):
 class OrderType(models.TextChoices):
     TRAVEL = "travel", "Travel"
     DELIVERY = "delivery", "Delivery"
-
-
 
 
 class Order(models.Model):
@@ -230,7 +245,6 @@ class Order(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
 
     class Meta:
         ordering = ['-created_at']
