@@ -76,6 +76,7 @@ class CityPriceInline(admin.TabularInline):
     model = City
     extra = 1
 
+
 class CityAdmin(admin.ModelAdmin):
     list_display = [
         'title',
