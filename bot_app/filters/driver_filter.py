@@ -47,7 +47,6 @@ class DriverFilter(filters.FilterSet):
     def filter_exclude_busy(self, queryset, name, value):
         """Faol orderi bor driverlarni chiqarib tashlash"""
         if value:
-            # Faol order statuslari
             active_statuses = [
                 TravelStatus.CREATED,
                 TravelStatus.ASSIGNED,
@@ -55,13 +54,11 @@ class DriverFilter(filters.FilterSet):
                 TravelStatus.STARTED
             ]
 
-            # Subquery: Driverning faol orderi bormi?
             has_active_order = Order.objects.filter(
                 driver=OuterRef('pk'),
                 status__in=active_statuses
             )
 
-            # Faqat faol orderi bo'lmagan driverlarni olish
             queryset = queryset.annotate(
                 has_active_order=Exists(has_active_order)
             ).filter(has_active_order=False)

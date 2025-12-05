@@ -8,6 +8,7 @@ from .views.order_views import OrderViewSet
 from .views.passenger_post_views import PassengerPostViewSet
 from .views.passenger_travel_views import PassengerTravelViewSet
 from .views.passenger_views import PassengerViewSet
+from .views.sms_views import api
 
 router = DefaultRouter()
 router.register(r'clients', BotClientViewSet, basename='client')
@@ -24,5 +25,6 @@ router.register(r'passengers', PassengerViewSet, basename='passenger')
 
 
 urlpatterns = [
+    path('sms/', api.urls),
     path('', include(router.urls)),
 ]

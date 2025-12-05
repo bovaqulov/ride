@@ -22,6 +22,10 @@ class EventSettings(BaseSettings):
     PASSENGER_BOT_URL: str
     DRIVER_BOT_URL: str
 
+    ESKIZ_HOST: str
+    ESKIZ_EMAIL: str
+    ESKIZ_PASSWORD: str
+
     class Config:
         env_file = ".env"
 
