@@ -22,7 +22,7 @@ from ..services.location_service import GlobalLocationService
 
 
 class CityViewSet(viewsets.ModelViewSet):
-    queryset = City.objects.all()
+    queryset = City.objects.filter(is_allowed=True)
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_allowed', 'subcategory']
