@@ -29,7 +29,7 @@ def create_order(sender, instance, created, **kwargs):
             order_type=order_type,
             content_object=instance
         )
-        # Yangi buyurtma — barcha onlayn driverlarga xabar
+
         transaction.on_commit(lambda: notify_driver_bot.delay(order.pk))
         logger.info(f"Order {order.pk} created from {sender.__name__} {instance.pk}")
     except Exception as e:
