@@ -175,6 +175,12 @@ class OrderAdmin(admin.ModelAdmin):
 
     make_cancelled.short_description = "Tanlangan orderlarni cancelled qilish"
 
+    def creator_name(self, obj):
+        try:
+            client = BotClient.objects.get(telegram_id=obj.user)
+            return f"{client.full_name}({client.full_name})"
+        except BotClient.DoesNotExist:
+            return obj.user
 
 @admin.register(Passenger)
 class PassengerAdmin(admin.ModelAdmin):
