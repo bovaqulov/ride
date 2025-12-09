@@ -124,7 +124,7 @@ class OrderAdmin(admin.ModelAdmin):
     # Ro'yxatda ko'rsatiladigan maydonlar
     list_display = [
         'id',
-        'user',
+        'creator_name',
         'order_type',
         'status',
         'driver',
