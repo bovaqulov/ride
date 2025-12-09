@@ -19,6 +19,7 @@ class EventSettings(BaseSettings):
     CELERY_RESULT_BACKEND_DEMO: str = 'redis://localhost:6379/1'
     REDIS_PUBLIC_URL: str
 
+
     PASSENGER_BOT_URL: str
     DRIVER_BOT_URL: str
 
