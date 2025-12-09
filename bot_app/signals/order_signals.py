@@ -20,7 +20,8 @@ def update_order(sender, instance: Order, **kwargs):
 
         notify_passenger_bot.delay(instance.pk)
 
-
+    if instance.driver and instance.status == TravelStatus.ARRIVED:
+        notify_passenger_bot.delay(instance.pk)
 
     if instance.driver and instance.status == TravelStatus.ENDED:
         notify_passenger_bot.delay(instance.pk)
