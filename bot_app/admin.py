@@ -41,12 +41,19 @@ class PassengerTravelAdmin(admin.ModelAdmin):
 
 @admin.register(PassengerPost)
 class PassengerPostAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "from_location", "to_location", "price", "created_at")
+    list_display = ("id", "creator_name", "from_location", "to_location", "price", "created_at")
     list_filter = ("created_at",)
     search_fields = ("from_location", "to_location", "user")
     list_editable = ("price",)
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
+
+    def creator_name(self, obj):
+        try:
+            client = BotClient.objects.get(telegram_id=obj.user)
+            return f"{client.full_name}({obj.user})"
+        except BotClient.DoesNotExist:
+            return obj.user
 
 
 class CarInline(admin.TabularInline):
