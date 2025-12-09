@@ -8,7 +8,7 @@ from .models import (
 
 @admin.register(BotClient)
 class BotClientAdmin(admin.ModelAdmin):
-    list_display = ("id", "full_name", "username", "language", "is_banned", "created_at")
+    list_display = ("id", "telegram_id", "full_name", "username", "language", "is_banned", "created_at")
     list_filter = ("is_banned", "language", "created_at")
     search_fields = ("full_name", "username", "telegram_id")
     list_editable = ("is_banned",)
