@@ -8,6 +8,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 import logging
 
+from ..filters.city_filters import CityFilter
 from ..models import City, CityPrice
 from ..serializers.city import (
     CitySerializer,
@@ -30,6 +31,7 @@ class CityViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_allowed', 'subcategory']
+    filterset_class = CityFilter
     search_fields = ['title']
     ordering_fields = ['title', 'created_at', 'updated_at']
     ordering = ['title']

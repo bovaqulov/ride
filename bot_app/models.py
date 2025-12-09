@@ -4,7 +4,7 @@ from typing import Optional
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +173,7 @@ class Car(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.car_number
+        return str(self.car_number)
 
     class Meta:
         ordering = ['-created_at']
@@ -186,7 +186,7 @@ class DriverTransaction(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.driver
+        return str(self.driver)
 
     class Meta:
         ordering = ['-created_at']

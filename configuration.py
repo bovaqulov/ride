@@ -19,7 +19,6 @@ class EventSettings(BaseSettings):
     CELERY_RESULT_BACKEND_DEMO: str = 'redis://localhost:6379/1'
     REDIS_PUBLIC_URL: str
 
-
     PASSENGER_BOT_URL: str
     DRIVER_BOT_URL: str
 
@@ -32,10 +31,12 @@ class EventSettings(BaseSettings):
 
     @property
     def CELERY_BROKER_URL(self):
+        # return self.CELERY_BROKER_URL_DEMO
         return self.REDIS_PUBLIC_URL
 
     @property
     def CELERY_RESULT_BACKEND(self):
+        # return self.CELERY_RESULT_BACKEND_DEMO
         return self.REDIS_PUBLIC_URL
 
     @property
@@ -49,7 +50,6 @@ class EventSettings(BaseSettings):
     @property
     def DB_URL(self) -> str:
         return self.DATABASE_PUBLIC_URL
-
 
     @property
     def DATABASES(self):
@@ -65,13 +65,12 @@ class EventSettings(BaseSettings):
     @property
     def PASSENGER_URL(self) -> str:
         return self.PASSENGER_BOT_URL
-        return "http://127.0.0.1:8888/"
+        # return "http://127.0.0.1:8888/"
 
     @property
     def DRIVER_URL(self):
         return self.DRIVER_BOT_URL
-
-
+        # return "http://127.0.0.1:8080/"
 
 def en():
     return EventSettings()
