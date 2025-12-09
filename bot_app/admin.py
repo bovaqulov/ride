@@ -181,7 +181,7 @@ class OrderAdmin(admin.ModelAdmin):
     def creator_name(self, obj):
         try:
             client = BotClient.objects.get(telegram_id=obj.user)
-            return f"{client.full_name}({obj.telegram_id})"
+            return f"{client.full_name}({obj.user})"
         except BotClient.DoesNotExist:
             return obj.user
 
