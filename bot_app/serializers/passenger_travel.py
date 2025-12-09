@@ -1,17 +1,21 @@
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
-from ..models import PassengerTravel, Order
+
+from .bot_client import BotClientSerializer
+from ..models import PassengerTravel, Order, BotClient
 
 
 class PassengerTravelSerializer(serializers.ModelSerializer):
     from_city = serializers.SerializerMethodField()
     to_city = serializers.SerializerMethodField()
     order_id = serializers.SerializerMethodField()
+    creator = serializers.SerializerMethodField()
+
 
     class Meta:
         model = PassengerTravel
         fields = [
-            'id', 'user', 'order_id', 'rate', 'from_location', 'to_location',
+            'id', 'user', 'creator', 'order_id', 'rate', 'from_location', 'to_location',
             'from_city', 'to_city', 'travel_class', 'passenger',
             'price', 'has_woman', "created_at"
         ]
@@ -40,6 +44,14 @@ class PassengerTravelSerializer(serializers.ModelSerializer):
             return order.pk if order else None
         except Order.DoesNotExist:
             return None
+
+    def get_creator(self, obj):
+        """Get creator after object is created"""
+        try:
+            creator = BotClient.objects.get(telegram_id=obj.user)
+            return BotClientSerializer(creator).data
+        except BotClient.DoesNotExist:
+            return {}
 
 class PassengerTravelCreateSerializer(serializers.ModelSerializer):
 

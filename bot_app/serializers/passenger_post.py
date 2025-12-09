@@ -1,16 +1,19 @@
 # serializers/passenger_post.py
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
-from ..models import PassengerPost, Order
+
+from .bot_client import BotClientSerializer
+from ..models import PassengerPost, Order, BotClient
 
 
 class PassengerPostSerializer(serializers.ModelSerializer):
     order_id = serializers.SerializerMethodField()
+    creator = serializers.SerializerMethodField()
 
     class Meta:
         model = PassengerPost
         fields = [
-            'id', 'user', 'order_id', 'from_location', 'to_location', 'price'
+            'id', 'creator', 'order_id', 'from_location', 'to_location', 'price'
         ]
         read_only_fields = ['id']
 
@@ -25,10 +28,30 @@ class PassengerPostSerializer(serializers.ModelSerializer):
         except Order.DoesNotExist:
             return None
 
+    def get_creator(self, obj):
+        """Get creator after object is created"""
+        try:
+            creator = BotClient.objects.get(
+                telegram_id=obj.user
+            )
+            return BotClientSerializer(creator).data
+        except BotClient.DoesNotExist:
+            return {}
+
 class PassengerPostCreateSerializer(serializers.ModelSerializer):
+    creator = serializers.SerializerMethodField()
+
     class Meta:
         model = PassengerPost
-        fields = ['user', 'from_location', 'to_location', 'price']
+        fields = ['user', 'creator', 'from_location', 'to_location', 'price']
+
+    def get_creator(self, obj):
+        """Get creator after object is created"""
+        try:
+            creator = BotClient.objects.get(telegram_id=obj.user)
+            return BotClientSerializer(creator).data
+        except BotClient.DoesNotExist:
+            return {}
 
 
 class PassengerPostUpdateSerializer(serializers.ModelSerializer):
@@ -38,6 +61,16 @@ class PassengerPostUpdateSerializer(serializers.ModelSerializer):
 
 
 class PassengerPostListSerializer(serializers.ModelSerializer):
+    creator = serializers.SerializerMethodField()
+
     class Meta:
         model = PassengerPost
-        fields = ['id', 'user', 'from_location', 'to_location', 'price']
+        fields = ['id', 'user', 'creator', 'from_location', 'to_location', 'price']
+
+    def get_creator(self, obj):
+        """Get creator after object is created"""
+        try:
+            creator = BotClient.objects.get(telegram_id=obj.user)
+            return BotClientSerializer(creator).data
+        except BotClient.DoesNotExist:
+            return {}

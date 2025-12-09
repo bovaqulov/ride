@@ -8,8 +8,8 @@ from ..models import Driver, Car, DriverTransaction, DriverStatus, TravelClass, 
 class DriverFilter(filters.FilterSet):
     # Asosiy filterlar
     status = filters.ChoiceFilter(choices=DriverStatus.choices)
-    from_location = filters.CharFilter(lookup_expr='icontains')
-    to_location = filters.CharFilter(lookup_expr='icontains')
+    from_location = filters.CharFilter(field_name='from_location__title', lookup_expr='icontains')
+    to_location = filters.CharFilter(field_name='to_location__title', lookup_expr='icontains')
     phone = filters.CharFilter(lookup_expr='icontains')
     telegram_id = filters.CharFilter(lookup_expr='icontains')
 
@@ -36,8 +36,8 @@ class DriverFilter(filters.FilterSet):
 
     def filter_by_location(self, queryset, name, value):
         return queryset.filter(
-            Q(from_location__icontains=value) |
-            Q(to_location__icontains=value)
+            Q(from_location__title__icontains=value) |
+            Q(to_location__title__icontains=value)
         )
 
     def filter_by_car_class(self, queryset, name, value):

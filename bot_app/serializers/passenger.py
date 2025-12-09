@@ -5,6 +5,7 @@ from ..models import Passenger, BotClient
 
 class PassengerSerializer(serializers.ModelSerializer):
     language = serializers.SerializerMethodField()
+
     class Meta:
         model = Passenger
         fields = [

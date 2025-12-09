@@ -1,20 +1,36 @@
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.contrib.contenttypes.models import ContentType
+from django.db import transaction
+import logging
+
 from ..models import PassengerTravel, OrderType, PassengerPost, Order
+from ..tasks.travel_tasks import notify_driver_bot
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(post_save, sender=PassengerTravel)
 @receiver(post_save, sender=PassengerPost)
 def create_order(sender, instance, created, **kwargs):
-    if created:
-        if isinstance(instance, PassengerTravel):
-            order_type = OrderType.TRAVEL
-        else:
-            order_type = OrderType.DELIVERY
+    if not created:
+        return
 
-        Order.objects.create(
+    order_type = OrderType.TRAVEL if isinstance(instance, PassengerTravel) else OrderType.DELIVERY
+    content_type = ContentType.objects.get_for_model(sender)
+
+    if Order.objects.filter(content_type=content_type, object_id=instance.pk).exists():
+        logger.warning(f"Order already exists for {sender.__name__} {instance.pk}")
+        return
+
+    try:
+        order = Order.objects.create(
             user=instance.user,
             order_type=order_type,
             content_object=instance
         )
-
+        # Yangi buyurtma — barcha onlayn driverlarga xabar
+        transaction.on_commit(lambda: notify_driver_bot.delay(order.pk))
+        logger.info(f"Order {order.pk} created from {sender.__name__} {instance.pk}")
+    except Exception as e:
+        logger.error(f"Failed to create Order for {sender.__name__} {instance.pk}: {e}", exc_info=True)

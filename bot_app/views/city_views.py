@@ -1,14 +1,14 @@
-# views.py
 from asgiref.sync import async_to_sync, sync_to_async
-from django.db.models import Q
-from rest_framework import viewsets, status
+from django.db.models import Q, Prefetch
+from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
+import logging
 
-from ..models import City
+from ..models import City, CityPrice
 from ..serializers.city import (
     CitySerializer,
     CityCreateSerializer,
@@ -20,9 +20,13 @@ from ..serializers.city import (
 )
 from ..services.location_service import GlobalLocationService
 
+logger = logging.getLogger(__name__)
+
 
 class CityViewSet(viewsets.ModelViewSet):
-    queryset = City.objects.filter(is_allowed=True)
+    queryset = City.objects.filter(is_allowed=True).prefetch_related(
+        Prefetch('cityprice', queryset=CityPrice.objects.only('economy', 'comfort', 'standard'))
+    )
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_allowed', 'subcategory']
@@ -31,7 +35,7 @@ class CityViewSet(viewsets.ModelViewSet):
     ordering = ['title']
 
     def get_serializer_class(self):
-        if self.action == 'create' or self.action == 'update':
+        if self.action in ['create', 'update', 'partial_update']:
             return CityCreateSerializer
         return CitySerializer
 
@@ -41,30 +45,15 @@ class CityViewSet(viewsets.ModelViewSet):
 
     async def _async_create(self, request, *args, **kwargs):
         """Async create logic"""
+        logger.debug(f"Create request data: {request.data}")
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Location tekshiruvi
-        latitude = request.data.get('latitude')
-        longitude = request.data.get('longitude')
-        city_title = request.data.get('title')
-        skip_validation = request.data.get('skip_location_validation', False)
-
-        if latitude and longitude and city_title and not skip_validation:
-            validation_result = await GlobalLocationService.validate_city_location(
-                city_title, latitude, longitude
-            )
-
-            if not validation_result["valid"]:
-                return Response({
-                    "error": "location_validation_failed",
-                    "message": validation_result["message"],
-                    "details": validation_result
-                }, status=status.HTTP_400_BAD_REQUEST)
-
         city = await sync_to_async(serializer.save)()
-        response_serializer = CitySerializer(city)
-        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+        response_data = await sync_to_async(self._prepare_city_response)(city, request)
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         """Sync wrapper for async update"""
@@ -73,15 +62,18 @@ class CityViewSet(viewsets.ModelViewSet):
     async def _async_update(self, request, *args, **kwargs):
         """Async update logic"""
         instance = await sync_to_async(self.get_object)()
+
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
 
-        latitude = request.data.get('latitude')
-        longitude = request.data.get('longitude')
-        city_title = request.data.get('title', instance.title)
-        skip_validation = request.data.get('skip_location_validation', False)
+        validated_data = serializer.validated_data
 
-        if latitude and longitude and not skip_validation:
+        # Location validation
+        latitude = validated_data.get('latitude', instance.latitude)
+        longitude = validated_data.get('longitude', instance.longitude)
+        city_title = validated_data.get('title', instance.title)
+
+        if latitude and longitude and not request.data.get('skip_location_validation', False):
             validation_result = await GlobalLocationService.validate_city_location(
                 city_title, latitude, longitude
             )
@@ -94,43 +86,93 @@ class CityViewSet(viewsets.ModelViewSet):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
         city = await sync_to_async(serializer.save)()
-        response_serializer = CitySerializer(city)
-        return Response(response_serializer.data)
+        response_data = await sync_to_async(self._prepare_city_response)(city, request)
+
+        return Response(response_data)
+
+    def _prepare_city_response(self, city, request):
+        """Sync method: Prepare city response data"""
+        try:
+            city_price = city.cityprice  # prefetch related dan olish
+            price_data = {
+                "economy": city_price.economy,
+                "comfort": city_price.comfort,
+                "standard": city_price.standard
+            }
+        except (CityPrice.DoesNotExist, AttributeError):
+            price_data = None
+
+        serializer = CitySerializer(city, context={'request': request})
+        data = serializer.data
+
+        if price_data:
+            data['price'] = price_data
+        else:
+            data['price'] = None
+
+        return data
 
     @action(detail=False, methods=['post'], url_path='check-location')
     def check_location(self, request):
         """Sync wrapper for async check_location"""
-        return async_to_sync(self._async_check_location)(request)
+        logger.debug(f"Check location request: {request.data}")
+        logger.debug(f"Content type: {request.content_type}")
+
+        try:
+            return async_to_sync(self._async_check_location)(request)
+        except Exception as e:
+            logger.error(f"Error in check_location: {str(e)}", exc_info=True)
+            return Response({
+                "error": "Internal server error",
+                "details": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     async def _async_check_location(self, request):
-        """Koordinatalar shahar hududida ekanligini tekshirish"""
+        """Check if coordinates are within city area"""
+        logger.debug(f"Async check_location called with data: {request.data}")
+
         serializer = LocationCheckSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+
+        if not serializer.is_valid():
+            logger.error(f"Serializer validation errors: {serializer.errors}")
+            logger.error(f"Raw data that failed validation: {request.data}")
+            raise serializers.ValidationError(serializer.errors)
 
         lat = serializer.validated_data['latitude']
         lon = serializer.validated_data['longitude']
         max_distance = serializer.validated_data['max_distance_km']
 
+        logger.debug(f"Validated data - lat: {lat}, lon: {lon}, max_distance: {max_distance}")
+
         city, distance, address_info = await GlobalLocationService.find_city_for_location(
             lat, lon, max_distance
         )
 
+        logger.debug(f"Found city: {city}, distance: {distance}")
+
         if city:
+            city_data = await sync_to_async(self._prepare_city_response)(city, request)
+
             response_data = {
                 "is_in_city": True,
-                "city": CitySerializer(city).data,
-                "distance_km": round(distance, 2),
+                "city": city_data,
+                "distance_km": round(distance, 2) if distance < float('inf') else None,
                 "address_info": address_info,
                 "message": f"Koordinatalar {city.title} shahar hududida. Masofa: {distance:.1f} km",
                 "match_type": "exact"
             }
         else:
             nearby_cities = await GlobalLocationService.search_cities_by_location(lat, lon, max_distance)
+
             if nearby_cities:
                 nearest_city = nearby_cities[0]
+                nearest_city_data = await sync_to_async(self._prepare_city_response)(
+                    nearest_city["city"], request
+                )
+
                 response_data = {
                     "is_in_city": False,
-                    "city": CitySerializer(nearest_city["city"]).data,
+                    "city": nearest_city_data,
                     "distance_km": round(nearest_city["distance_km"], 2),
                     "address_info": address_info,
                     "message": f"Koordinatalar hech qanday shahar hududida emas. Eng yaqin shahar: {nearest_city['city'].title} ({nearest_city['distance_km']:.1f} km)",
@@ -144,6 +186,7 @@ class CityViewSet(viewsets.ModelViewSet):
                     "match_type": "none"
                 }
 
+        logger.debug(f"Response data: {response_data}")
         response_serializer = LocationCheckResponseSerializer(response_data)
         return Response(response_serializer.data)
 
@@ -153,7 +196,7 @@ class CityViewSet(viewsets.ModelViewSet):
         return async_to_sync(self._async_validate_city_location)(request)
 
     async def _async_validate_city_location(self, request):
-        """Shahar nomi va koordinatalar mos kelishini tekshirish"""
+        """Validate if city name matches coordinates"""
         serializer = CityValidationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -172,7 +215,7 @@ class CityViewSet(viewsets.ModelViewSet):
         return async_to_sync(self._async_nearby_cities)(request)
 
     async def _async_nearby_cities(self, request):
-        """Berilgan lokatsiya atrofidagi shaharlarni topish"""
+        """Find cities near given location"""
         serializer = LocationCheckSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -184,8 +227,12 @@ class CityViewSet(viewsets.ModelViewSet):
 
         results = []
         for city_data in nearby_cities:
+            city_response_data = await sync_to_async(self._prepare_city_response)(
+                city_data["city"], request
+            )
+
             results.append({
-                "city": CitySerializer(city_data["city"]).data,
+                "city": city_response_data,
                 "distance_km": round(city_data["distance_km"], 2),
                 "coordinates": city_data.get("coordinates"),
                 "match_type": city_data["match_type"]
@@ -200,7 +247,7 @@ class CityViewSet(viewsets.ModelViewSet):
         return async_to_sync(self._async_get_city_location_info)(request, pk)
 
     async def _async_get_city_location_info(self, request, pk=None):
-        """Shahar uchun lokatsiya ma'lumotlarini olish"""
+        """Get location information for a city"""
         city = await sync_to_async(self.get_object)()
 
         city_coords = await GlobalLocationService.get_city_coordinates(city.title)
@@ -209,13 +256,13 @@ class CityViewSet(viewsets.ModelViewSet):
                 "error": "Shahar uchun lokatsiya ma'lumotlari topilmadi"
             }, status=status.HTTP_404_NOT_FOUND)
 
-        # get_place_from_coords_sync ichida asyncio.run() bor, shuning uchun uni
-        # to'g'ridan-to'g'ri aget_place_from_coords bilan almashtirish kerak
         from ..utils.nominatim_utils import aget_place_from_coords
         address_info = await aget_place_from_coords(city_coords[0], city_coords[1])
 
+        city_data = await sync_to_async(self._prepare_city_response)(city, request)
+
         return Response({
-            "city": CitySerializer(city).data,
+            "city": city_data,
             "coordinates": {
                 "latitude": city_coords[0],
                 "longitude": city_coords[1]
@@ -229,7 +276,7 @@ class CityViewSet(viewsets.ModelViewSet):
         return async_to_sync(self._async_search_cities_by_name)(request)
 
     async def _async_search_cities_by_name(self, request):
-        """Shahar nomi bo'yicha qidirish va koordinatalarni olish"""
+        """Search cities by name and get coordinates"""
         city_name = request.query_params.get('name')
         if not city_name:
             return Response({
@@ -239,9 +286,10 @@ class CityViewSet(viewsets.ModelViewSet):
         @sync_to_async
         def get_cities():
             return list(City.objects.filter(
-                Q(title__icontains=city_name) |
-                Q(title__iexact=city_name),
+                Q(title__icontains=city_name) | Q(title__iexact=city_name),
                 is_allowed=True
+            ).prefetch_related(
+                Prefetch('cityprice', queryset=CityPrice.objects.only('economy', 'comfort', 'standard'))
             ))
 
         cities = await get_cities()
@@ -249,8 +297,11 @@ class CityViewSet(viewsets.ModelViewSet):
         results = []
         for city in cities:
             city_coords = await GlobalLocationService.get_city_coordinates(city.title)
+
+            city_data = await sync_to_async(self._prepare_city_response)(city, request)
+
             results.append({
-                "city": CitySerializer(city).data,
+                "city": city_data,
                 "coordinates": {
                     "latitude": city_coords[0],
                     "longitude": city_coords[1]

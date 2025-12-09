@@ -1,0 +1,246 @@
+{
+  "info": {
+    "_postman_id": "a3b6bc3e-97fa-4d68-8e6b-3b90a8d11025",
+    "name": "G'oz driver",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Telegram foydalanuvchisi",
+      "item": [
+        {
+          "name": "Hamma telegram foydalanuvchisi olish",
+          "id": "5d90b0b3-cbb2-4929-965d-35d20846d38a",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token_demo}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url}}/api/v1/clients/",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "clients",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Telegram Id orqali foydalanuvchini olish",
+          "id": "6ede6c7b-673a-4fb2-847e-43b11ca7e9d2",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token_demo}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url}}/api/v1/clients/by-telegram-id/1",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "clients",
+                "by-telegram-id",
+                "1"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Yangi Telegram  foydalanuvchisini qo'shish",
+          "id": "821a8a97-c507-41d4-beb8-1d4d512d2164",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token_demo}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"telegram_id\": 3,\n  \"username\": \"string\",\n  \"full_name\": \"string\",\n  \"language\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url}}/api/v1/clients/",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "clients",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Telegram foydalanuvchi ma'lumotlarini yangilash",
+          "id": "eab2344a-7881-4e3f-953c-fdd8b1c5af87",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token_demo}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"language\": \"uz\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url}}/api/v1/clients/1/",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "clients",
+                "1",
+                ""
+              ]
+            }
+          }
+        }
+      ],
+      "id": "2cc6737f-f9b4-487b-b878-4d3070584c6a"
+    },
+    {
+      "name": "Shaharlar",
+      "item": [
+        {
+          "name": "Barcha Shaharlarni olish",
+          "id": "25c14e8f-6351-4a4c-8cc8-02e037da6d26",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token_demo}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url}}/api/v1/cities/",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cities",
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "name": "Yangi shahar qo'shish",
+          "id": "e41ca492-76fc-4670-a195-de05e425ef5e",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "{{token_demo}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Buxoro\",\n  \"translate\": {\n    \"uz\": \"Buxoro\",\n    \"en\": \"Bukhara\",\n    \"ru\": \"Бухара\"\n  },\n  \"latitude\": 39.7681,\n  \"longitude\": 64.4556,\n  \"price\": {\n    \"economy\": 13000.00,\n    \"comfort\": 23000.00,\n    \"standard\": 19000.00\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{url}}/api/v1/cities/",
+              "host": [
+                "{{url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cities",
+                ""
+              ]
+            },
+            "description": "{ \"title\": \"Buxoro\", \"translate\": { \"uz\": \"Buxoro\", \"en\": \"Bukhara\", \"ru\": \"Бухара\" }, \"latitude\": 39.7681, \"longitude\": 64.4556, \"price\": { \"economy\": 13000.00, \"comfort\": 23000.00, \"standard\": 19000.00 }}"
+          }
+        }
+      ],
+      "id": "2ca8d0de-0c71-4f60-9cfe-70558f793071"
+    }
+  ],
+  "variable": [
+    {
+      "id": "1b68c380-2ae8-4253-8620-274d0a2e52d5",
+      "key": "url",
+      "value": "http://127.0.0.1:8000/"
+    },
+    {
+      "id": "c08947a2-5853-4fd1-9ecc-86e384fed1c1",
+      "key": "token_demo",
+      "value": "Token cdd84cef9e28f99d2e52270e60fe3bb6105d4c12"
+    }
+  ]
+}

@@ -13,14 +13,17 @@ class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
         fields = [
-            'id', 'title', "price", 'translate', 'subcategory', 'latitude', 'longitude', 'subcategory_title', 'subcategory_id',
+            'id', 'title', 'price', 'translate', 'subcategory', 'latitude', 'longitude', 'subcategory_title', 'subcategory_id',
             'is_allowed', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
 
     def get_price(self, obj):
-        city_price = CityPrice.objects.get(city=obj)
-        return CityPriceSerializer(city_price).data
+        try:
+            city_price = CityPrice.objects.get(city=obj)
+            return CityPriceSerializer(city_price).data
+        except CityPrice.DoesNotExist:
+            return {}
 
 
 class CityPriceSerializer(serializers.ModelSerializer):
@@ -30,33 +33,87 @@ class CityPriceSerializer(serializers.ModelSerializer):
             "economy", "comfort", "standard"
         ]
 
+
 class CityCreateSerializer(serializers.ModelSerializer):
     latitude = serializers.FloatField(required=False, write_only=True)
     longitude = serializers.FloatField(required=False, write_only=True)
-    skip_location_validation = serializers.BooleanField(default=False, write_only=True)
+    price = serializers.DictField(
+        required=False,
+        write_only=True,
+        help_text="Price object containing economy, comfort, standard fields"
+    )
 
     class Meta:
         model = City
-        fields = ['title', 'subcategory', 'translate', 'is_allowed', 'latitude', 'longitude', 'skip_location_validation']
+        fields = [
+            'title', 'subcategory', 'translate', 'is_allowed',
+            'latitude', 'longitude', 'price'
+        ]
 
     def validate(self, data):
-        latitude = data.get('latitude')
-        longitude = data.get('longitude')
-        skip_validation = data.get('skip_location_validation', False)
+        price = data.get('price')
+        if price:
+            # Price validatsiyasi
+            required_fields = ['economy', 'comfort', 'standard']
+            for field in required_fields:
+                if field not in price:
+                    raise serializers.ValidationError({
+                        "price": f"{field} field is required in price object"
+                    })
 
-        if latitude and longitude and not skip_validation:
-            # Koordinatalarni tekshirish
-            if not (-90 <= latitude <= 90):
-                raise serializers.ValidationError({
-                    "latitude": "Latitude -90 dan 90 gacha bo'lishi kerak"
-                })
-            if not (-180 <= longitude <= 180):
-                raise serializers.ValidationError({
-                    "longitude": "Longitude -180 dan 180 gacha bo'lishi kerak"
-                })
+                # Agar raqam emas bo'lsa
+                if not isinstance(price[field], (int, float)):
+                    try:
+                        price[field] = float(price[field])
+                    except (ValueError, TypeError):
+                        raise serializers.ValidationError({
+                            "price": f"{field} must be a number"
+                        })
 
         return data
 
+    def create(self, validated_data):
+        # Ajratib olish
+        price_data = validated_data.pop('price', None)
+
+        # City yaratish
+        city = super().create(validated_data)
+
+        # Agar price bo'lsa, CityPrice yaratish
+        if price_data:
+            CityPrice.objects.create(
+                city=city,
+                economy=price_data.get('economy', 0),
+                comfort=price_data.get('comfort', 0),
+                standard=price_data.get('standard', 0)
+            )
+
+        return city
+
+    def update(self, instance, validated_data):
+        # Ajratib olish
+        price_data = validated_data.pop('price', None)
+
+        # City yangilash
+        city = super().update(instance, validated_data)
+
+        # Agar price bo'lsa, CityPrice ni yangilash yoki yaratish
+        if price_data is not None:
+            try:
+                city_price = CityPrice.objects.get(city=city)
+                city_price.economy = price_data.get('economy', city_price.economy)
+                city_price.comfort = price_data.get('comfort', city_price.comfort)
+                city_price.standard = price_data.get('standard', city_price.standard)
+                city_price.save()
+            except CityPrice.DoesNotExist:
+                CityPrice.objects.create(
+                    city=city,
+                    economy=price_data.get('economy', 0),
+                    comfort=price_data.get('comfort', 0),
+                    standard=price_data.get('standard', 0)
+                )
+
+        return city
 
 class LocationCheckSerializer(serializers.Serializer):
     latitude = serializers.FloatField(required=True, min_value=-90, max_value=90)

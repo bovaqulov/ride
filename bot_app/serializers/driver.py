@@ -2,6 +2,7 @@
 from rest_framework import serializers
 
 from .bot_client import BotClientSerializer
+from .city import CitySerializer
 from ..models import Driver, Car, DriverTransaction, BotClient, DriverGallery
 
 
@@ -23,7 +24,8 @@ class DriverCarSerializer(serializers.ModelSerializer):
             'id',
             'car_number',
             'car_model',
-            'car_color'
+            'car_color',
+            'car_class'
         ]
         read_only_fields = ('created_at', 'updated_at')
 
@@ -72,72 +74,6 @@ class DriverWithCarsSerializer(serializers.ModelSerializer):
             pass
         return None
 
-
-class DriverDetailSerializer(serializers.ModelSerializer):
-    """Driver ning batafsil ma'lumotlari"""
-
-    cars = DriverCarSerializer(many=True, read_only=True, source='driver')
-    total_earnings = serializers.SerializerMethodField()
-    active_cars_count = serializers.SerializerMethodField()
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    profile_image = serializers.SerializerMethodField()  # Yangi qo'shildi
-    gallery_info = serializers.SerializerMethodField()  # Barcha gallery ma'lumotlari uchun
-
-    class Meta:
-        model = Driver
-        fields = [
-            'id',
-            'telegram_id',
-            'from_location',
-            'to_location',
-            'status',
-            'status_display',
-            'amount',
-            'total_earnings',
-            'active_cars_count',
-            'cars',
-            'profile_image',  # Yangi qo'shildi
-            'gallery_info',  # Yangi qo'shildi
-            'created_at',
-            'updated_at'
-        ]
-        read_only_fields = ('created_at', 'updated_at')
-        ref_name = 'DriverDetailSerializer'
-
-    def get_total_earnings(self, obj):
-        """Driverning jami daromadi (transactions bo'yicha)"""
-        from django.db.models import Sum
-        total = DriverTransaction.objects.filter(
-            driver=obj
-        ).aggregate(total=Sum('amount'))['total']
-        return total or 0
-
-    def get_active_cars_count(self, obj):
-        """Faol carlar soni (barcha carlar faol deb hisoblaymiz)"""
-        return obj.driver.count()
-
-    def get_profile_image(self, obj):
-        """Driverning profile rasmini olish"""
-        try:
-            gallery = DriverGallery.objects.get(telegram_id=obj)
-            if gallery.profile_image:
-                request = self.context.get('request')
-                if request:
-                    return request.build_absolute_uri(gallery.profile_image.url)
-                return gallery.profile_image.url
-        except DriverGallery.DoesNotExist:
-            pass
-        return None
-
-    def get_gallery_info(self, obj):
-        """DriverGallery ning barcha ma'lumotlari"""
-        try:
-            gallery = DriverGallery.objects.get(telegram_id=obj)
-            return DriverGallerySerializer(gallery).data
-        except DriverGallery.DoesNotExist:
-            return None
-
-
 class DriverTransactionSerializer(serializers.ModelSerializer):
     driver_name = serializers.CharField(source='driver.from_location', read_only=True)
     driver_telegram_id = serializers.SerializerMethodField()
@@ -166,43 +102,13 @@ class DriverTransactionSerializer(serializers.ModelSerializer):
         return None
 
 
-class CarSerializer(serializers.ModelSerializer):
-    driver_info = serializers.SerializerMethodField()
-    driver_profile_image = serializers.SerializerMethodField()  # Yangi qo'shildi
-
-    class Meta:
-        model = Car
-        fields = '__all__'
-        read_only_fields = ('created_at', 'updated_at')
-        ref_name = 'CarSerializer'
-
-    def get_driver_info(self, obj):
-        return {
-            'id': obj.driver.id,
-            'telegram_id': obj.driver.telegram_id,
-            'from_location': obj.driver.from_location,
-            'to_location': obj.driver.to_location
-        }
-
-    def get_driver_profile_image(self, obj):
-        """Car uchun driverning rasmi"""
-        try:
-            gallery = DriverGallery.objects.get(telegram_id=obj.driver)
-            if gallery.profile_image:
-                request = self.context.get('request')
-                if request:
-                    return request.build_absolute_uri(gallery.profile_image.url)
-                return gallery.profile_image.url
-        except DriverGallery.DoesNotExist:
-            pass
-        return None
-
-
 class DriverSerializer(serializers.ModelSerializer):
     cars = DriverCarSerializer(many=True, read_only=True, source='driver')
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     profile_image = serializers.SerializerMethodField()  # Yangi qo'shildi
     full_profile_image_url = serializers.SerializerMethodField()  # To'liq URL uchun
+    from_location = serializers.CharField(source='from_location.title', read_only=True)
+    to_location = serializers.CharField(source='to_location.title', read_only=True)
 
     class Meta:
         model = Driver
@@ -230,7 +136,7 @@ class DriverSerializer(serializers.ModelSerializer):
             gallery = DriverGallery.objects.get(telegram_id=obj)
             return gallery.profile_image.path if gallery.profile_image else None
         except DriverGallery.DoesNotExist:
-            return None
+            return ""
 
     def get_full_profile_image_url(self, obj):
         """Driverning profile rasmini to'liq URL sifatida olish"""
@@ -243,7 +149,7 @@ class DriverSerializer(serializers.ModelSerializer):
                 return gallery.profile_image.url
         except DriverGallery.DoesNotExist:
             pass
-        return None
+        return ""
 
 
 class DriverListSerializer(serializers.ModelSerializer):
@@ -272,8 +178,11 @@ class DriverListSerializer(serializers.ModelSerializer):
         ref_name = 'DriverListSerializer'
 
     def get_driver_info(self, obj):
-        client = BotClient.objects.get(telegram_id=obj.telegram_id)
-        return BotClientSerializer(client).data
+        try:
+            client = BotClient.objects.get(telegram_id=obj.telegram_id)
+            return BotClientSerializer(client).data
+        except BotClient.DoesNotExist:
+            return {}
 
     def get_cars_count(self, obj):
         return obj.driver.count()
@@ -355,8 +264,29 @@ class DriverUpdateSerializer(serializers.ModelSerializer):
         return driver
 
 
+class DriverCarSerializer(serializers.ModelSerializer):
+    """Driver ga tegishli carlarni olish uchun serializer"""
+
+    class Meta:
+        model = Car
+        fields = [
+            'id',
+            'car_number',
+            'car_model',
+            'car_color',
+            'car_class'  # ✅ Bu field qo'shildi
+        ]
+        read_only_fields = ('created_at', 'updated_at')
+
+
 class DriverCreateSerializer(serializers.ModelSerializer):
-    profile_image = serializers.ImageField(write_only=True, required=False)  # Yangi qo'shildi
+    profile_image = serializers.ImageField(write_only=True, required=False)
+    cars = serializers.ListField(
+        child=serializers.DictField(),
+        write_only=True,
+        required=False,
+        help_text="List of cars: [{'car_number': '...', 'car_model': '...', 'car_color': '...', 'car_class': '...'}]"
+    )
 
     class Meta:
         model = Driver
@@ -368,15 +298,47 @@ class DriverCreateSerializer(serializers.ModelSerializer):
             'to_location',
             'status',
             'amount',
-            'profile_image'  # Yangi qo'shildi
+            'cars',
+            'profile_image'
         ]
+
+    def validate_cars(self, value):
+        """Cars list ni validatsiya qilish"""
+        for car in value:
+            required_fields = ['car_number', 'car_model', 'car_color', 'car_class']
+            for field in required_fields:
+                if field not in car:
+                    raise serializers.ValidationError(
+                        f"{field} field is required for each car"
+                    )
+
+            # car_class validatsiyasi
+            valid_car_classes = ['economy', 'comfort', 'standard']  # TravelClass.choices dan
+            if car['car_class'].lower() not in valid_car_classes:
+                raise serializers.ValidationError(
+                    f"car_class must be one of: {', '.join(valid_car_classes)}"
+                )
+
+        return value
 
     def create(self, validated_data):
         """Driver yaratish va rasmni saqlash"""
+        cars_data = validated_data.pop('cars', [])
         profile_image = validated_data.pop('profile_image', None)
 
         # Driver ni yaratish
         driver = Driver.objects.create(**validated_data)
+
+        # Agar mashinalar berilgan bo'lsa
+        if cars_data:
+            for car_data in cars_data:
+                Car.objects.create(
+                    driver=driver,
+                    car_number=car_data['car_number'],
+                    car_model=car_data['car_model'],
+                    car_color=car_data['car_color'],
+                    car_class=car_data['car_class'].lower()  # ✅ Kichik harfga o'tkazish
+                )
 
         # Agar rasm berilgan bo'lsa, DriverGallery ni yaratish
         if profile_image:

@@ -1,4 +1,5 @@
 # bot_app/views/driver_views.py
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -6,7 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Sum
 from ..models import DriverStatus, Driver, DriverTransaction
-from ..serializers.driver import DriverSerializer, DriverListSerializer, DriverUpdateSerializer, DriverTransactionSerializer
+from ..serializers.driver import DriverSerializer, DriverListSerializer, DriverUpdateSerializer, \
+    DriverTransactionSerializer, DriverCreateSerializer
 from ..filters.driver_filter import DriverFilter, DriverTransactionFilter
 
 
@@ -28,15 +30,13 @@ class DriverViewSet(viewsets.ModelViewSet):
             return DriverListSerializer
         elif self.action in ['update', 'partial_update']:
             return DriverUpdateSerializer
+        elif self.action == 'create':
+            return DriverCreateSerializer
         return DriverSerializer
-
 
     @action(detail=False, methods=['get'], url_path='by-telegram-id/(?P<telegram_id>[^/.]+)')
     def by_telegram_id(self, request, telegram_id=None):
         """Telegram ID bo'yicha driver qidirish"""
-        driver =  Driver.objects.get(telegram_id=telegram_id)
-        return Response(DriverSerializer(driver).data)
-
         if not telegram_id:
             return Response(
                 {'error': 'telegram_id parameter is required'},
@@ -44,14 +44,16 @@ class DriverViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            driver = Driver.objects.get(telegram_id=telegram_id)
-            serializer = self.get_serializer(driver)
-            return Response(serializer.data)
-        except Driver.DoesNotExist:
+            telegram_id = int(telegram_id)
+        except ValueError:
             return Response(
-                {'error': 'Driver not found'},
-                status=status.HTTP_404_NOT_FOUND
+                {'error': 'telegram_id must be an integer'},
+                status=status.HTTP_400_BAD_REQUEST
             )
+
+        driver = get_object_or_404(Driver, telegram_id=telegram_id)
+        serializer = self.get_serializer(driver)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['patch'])
     def update_status(self, request, pk=None):

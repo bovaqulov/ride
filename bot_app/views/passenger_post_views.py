@@ -43,16 +43,15 @@ class PassengerPostViewSet(viewsets.ModelViewSet):
         return Response(full_serializer.data, status=status.HTTP_201_CREATED)
 
 
-    @action(detail=False, methods=['get'])
-    def by_user(self, request):
+    @action(detail=False, methods=['get'], url_path='by-telegram-id/(?P<telegram_id>[^/.]+)')
+    def by_user(self, request, telegram_id=None):
         """Get posts by specific user"""
-        user_id = request.query_params.get('user')
-        if not user_id:
+        if not telegram_id:
             return Response(
                 {'error': 'user_id parameter is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        posts = PassengerPost.objects.filter(user=user_id)
+        posts = PassengerPost.objects.filter(user=telegram_id)
         serializer = self.get_serializer(posts, many=True)
         return Response(serializer.data)

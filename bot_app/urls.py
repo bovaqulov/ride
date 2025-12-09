@@ -1,6 +1,9 @@
 # urls.py
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+
+from . import views
+from .views import calculate_views
 from .views.bot_client_views import BotClientViewSet
 from .views.city_views import CityViewSet
 from .views.driver_views import DriverViewSet, DriverTransactionViewSet
@@ -24,7 +27,9 @@ router.register(r'passengers', PassengerViewSet, basename='passenger')
 
 
 
+
 urlpatterns = [
     path('sms/', api.urls),
+    path('calculate/', calculate_views.calculate),
     path('', include(router.urls)),
 ]

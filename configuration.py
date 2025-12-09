@@ -31,7 +31,7 @@ class EventSettings(BaseSettings):
 
     @property
     def CELERY_BROKER_URL(self):
-        return  self.REDIS_PUBLIC_URL
+        return self.REDIS_PUBLIC_URL
 
     @property
     def CELERY_RESULT_BACKEND(self):
@@ -64,6 +64,7 @@ class EventSettings(BaseSettings):
     @property
     def PASSENGER_URL(self) -> str:
         return self.PASSENGER_BOT_URL
+        return "http://127.0.0.1:8888/"
 
     @property
     def DRIVER_URL(self):

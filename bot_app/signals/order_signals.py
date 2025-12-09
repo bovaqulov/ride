@@ -24,4 +24,3 @@ def update_order(sender, instance: Order, **kwargs):
 
     if instance.driver and instance.status == TravelStatus.STARTED:
         notify_driver_bot.delay(instance.pk)
-
