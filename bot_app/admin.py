@@ -8,13 +8,15 @@ from .models import (
 
 @admin.register(BotClient)
 class BotClientAdmin(admin.ModelAdmin):
-    list_display = ("id", "telegram_id", "full_name", "username", "language", "is_banned", "created_at")
+    list_display = ("id", "new_full_name", "username", "language", "is_banned", "created_at")
     list_filter = ("is_banned", "language", "created_at")
     search_fields = ("full_name", "username", "telegram_id")
     list_editable = ("is_banned",)
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
 
+    def new_full_name(self, obj):
+        return f"{obj.full_name}({obj.telegram_id})"
 
 @admin.register(PassengerTravel)
 class PassengerTravelAdmin(admin.ModelAdmin):
