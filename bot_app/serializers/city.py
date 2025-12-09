@@ -20,7 +20,7 @@ class CitySerializer(serializers.ModelSerializer):
 
     def get_price(self, obj):
         try:
-            city_price = CityPrice.objects.get(city=obj)
+            city_price = CityPrice.objects.get(city=obj.pk)
             return CityPriceSerializer(city_price).data
         except CityPrice.DoesNotExist:
             return {}
