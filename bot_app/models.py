@@ -218,6 +218,7 @@ class CityPrice(models.Model):
     economy = models.DecimalField(decimal_places=2, max_digits=10)
     comfort = models.DecimalField(decimal_places=2, max_digits=10)
     standard = models.DecimalField(decimal_places=2, max_digits=10)
+    delivery = models.DecimalField(decimal_places=2, max_digits=10, default=50000)
 
     def __str__(self):
         return self.city.title

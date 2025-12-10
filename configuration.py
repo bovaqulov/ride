@@ -14,7 +14,7 @@ class EventSettings(BaseSettings):
     DATABASE_PUBLIC_URL: str = "sqlite:///db.sqlite3"
     # default api url
     DEFAULT_API_URL: str
-    # celery
+
     CELERY_BROKER_URL_DEMO: str = 'redis://localhost:6379/1'
     CELERY_RESULT_BACKEND_DEMO: str = 'redis://localhost:6379/1'
     REDIS_PUBLIC_URL: str
@@ -64,16 +64,18 @@ class EventSettings(BaseSettings):
 
     @property
     def PASSENGER_URL(self) -> str:
-        return self.PASSENGER_BOT_URL
-        # return "http://127.0.0.1:8888/"
+        # return self.PASSENGER_BOT_URL
+        return "http://127.0.0.1:8888/"
 
     @property
     def DRIVER_URL(self):
-        return self.DRIVER_BOT_URL
-        # return "http://127.0.0.1:8080/"
+        # return self.DRIVER_BOT_URL
+        return "http://127.0.0.1:8080/"
 
 def en():
     return EventSettings()
 
 
 env = en()
+
+# psql -h database-1.czic202o6e4s.eu-north-1.rds.amazonaws.com -U postgres -d postgres database connection

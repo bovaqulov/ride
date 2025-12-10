@@ -13,7 +13,8 @@ class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
         fields = [
-            'id', 'title', 'price', 'translate', 'subcategory', 'latitude', 'longitude', 'subcategory_title', 'subcategory_id',
+            'id', 'title', 'price', 'translate', 'subcategory', 'latitude', 'longitude', 'subcategory_title',
+            'subcategory_id',
             'is_allowed', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
@@ -30,7 +31,7 @@ class CityPriceSerializer(serializers.ModelSerializer):
     class Meta:
         model = CityPrice
         fields = [
-            "economy", "comfort", "standard"
+            "economy", "comfort", "standard", "delivery",
         ]
 
 
@@ -54,7 +55,7 @@ class CityCreateSerializer(serializers.ModelSerializer):
         price = data.get('price')
         if price:
             # Price validatsiyasi
-            required_fields = ['economy', 'comfort', 'standard']
+            required_fields = ['economy', 'comfort', 'standard', 'delivery']
             for field in required_fields:
                 if field not in price:
                     raise serializers.ValidationError({
@@ -85,7 +86,8 @@ class CityCreateSerializer(serializers.ModelSerializer):
                 city=city,
                 economy=price_data.get('economy', 0),
                 comfort=price_data.get('comfort', 0),
-                standard=price_data.get('standard', 0)
+                standard=price_data.get('standard', 0),
+                delivery=price_data.get('delivery', 0)
             )
 
         return city
@@ -104,16 +106,19 @@ class CityCreateSerializer(serializers.ModelSerializer):
                 city_price.economy = price_data.get('economy', city_price.economy)
                 city_price.comfort = price_data.get('comfort', city_price.comfort)
                 city_price.standard = price_data.get('standard', city_price.standard)
+                city_price.delivery = price_data.get('delivery', city_price.standard)
                 city_price.save()
             except CityPrice.DoesNotExist:
                 CityPrice.objects.create(
                     city=city,
                     economy=price_data.get('economy', 0),
                     comfort=price_data.get('comfort', 0),
-                    standard=price_data.get('standard', 0)
+                    standard=price_data.get('standard', 0),
+                    delivery=price_data.get('delivery', 0)
                 )
 
         return city
+
 
 class LocationCheckSerializer(serializers.Serializer):
     latitude = serializers.FloatField(required=True, min_value=-90, max_value=90)
