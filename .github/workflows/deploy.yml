@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           source: "."
-          target: "/opt/goz_driver/ride"
+          target: "/opt/ride"
 
       - name: SSH and Deploy
         uses: appleboy/ssh-action@v0.1.0
@@ -28,7 +28,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /opt/goz_driver/ride
+            cd /opt/ride
             docker-compose down
             docker-compose build
             docker-compose up -d

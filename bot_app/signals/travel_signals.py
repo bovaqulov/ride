@@ -3,12 +3,15 @@ from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 import logging
-
+from telebot import TeleBot
+from configuration import env
 from ..models import PassengerTravel, OrderType, PassengerPost, Order
 from ..tasks.travel_tasks import notify_driver_bot
 
 logger = logging.getLogger(__name__)
 
+
+bot = TeleBot(env.MAIN_BOT)
 
 @receiver(post_save, sender=PassengerTravel)
 @receiver(post_save, sender=PassengerPost)
@@ -31,6 +34,13 @@ def create_order(sender, instance, created, **kwargs):
         )
 
         transaction.on_commit(lambda: notify_driver_bot.delay(order.pk))
+
+        bot.send_message(
+            env.GROUP_ID,
+            f"Buyurtma ID {order.pk}"
+            f""
+        )
+
         logger.info(f"Order {order.pk} created from {sender.__name__} {instance.pk}")
     except Exception as e:
         logger.error(f"Failed to create Order for {sender.__name__} {instance.pk}: {e}", exc_info=True)

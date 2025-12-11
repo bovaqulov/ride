@@ -247,7 +247,7 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
-        'bot_app': {  # O'z app nomingizni yozing
+        'bot_app': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': True,

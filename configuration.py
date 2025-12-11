@@ -26,6 +26,9 @@ class EventSettings(BaseSettings):
     ESKIZ_EMAIL: str
     ESKIZ_PASSWORD: str
 
+    GROUP_ID: int = 4817936909
+    MAIN_BOT: str = None
+
     class Config:
         env_file = ".env"
 
