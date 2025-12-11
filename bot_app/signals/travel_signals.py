@@ -83,7 +83,8 @@ def create_order(sender, instance, created, **kwargs):
         order = Order.objects.create(
             user=instance.user,
             order_type=order_type,
-            content_object=instance
+            content_object=instance,
+            object_id=instance.pk,
         )
 
         # Celery task ishga tushishi
