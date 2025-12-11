@@ -67,13 +67,13 @@ class EventSettings(BaseSettings):
 
     @property
     def PASSENGER_URL(self) -> str:
-        # return self.PASSENGER_BOT_URL
-        return "http://127.0.0.1:8888/"
+        return self.PASSENGER_BOT_URL
+        # return "http://127.0.0.1:8888/"
 
     @property
     def DRIVER_URL(self):
-        # return self.DRIVER_BOT_URL
-        return "http://127.0.0.1:8080/"
+        return self.DRIVER_BOT_URL
+        # return "http://127.0.0.1:8080/"
 
 def en():
     return EventSettings()
