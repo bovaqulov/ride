@@ -90,7 +90,7 @@ def create_order(sender, instance, created, **kwargs):
         transaction.on_commit(lambda: notify_driver_bot.delay(order.pk))
 
         # Telegram xabar yuborish
-        transaction.on_commit(lambda: send_message_view(order.pk))
+        # transaction.on_commit(lambda: send_message_view(order.pk))
 
         logger.info(f"Order {order.pk} created from {sender.__name__} {instance.pk}")
     except Exception as e:
