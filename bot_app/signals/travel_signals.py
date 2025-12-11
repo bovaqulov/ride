@@ -6,12 +6,53 @@ import logging
 from telebot import TeleBot
 from configuration import env
 from ..models import PassengerTravel, OrderType, PassengerPost, Order
+
 from ..tasks.travel_tasks import notify_driver_bot
 
 logger = logging.getLogger(__name__)
 
 
 bot = TeleBot(env.MAIN_BOT)
+
+
+# Telegram xabar yuborish funksiyasi
+def send_message_view(order_pk):
+    from ..serializers.order import OrderSerializer
+
+    order_n = Order.objects.get(pk=order_pk)
+    order_data = OrderSerializer(order_n).data
+    creator = order_data["creator"]
+    content = order_data["content_object"]
+
+    message = (
+        f"📌 Yangi Buyurtma**\n"
+        f"Buyurtma ID: {order_data['id']}\n"
+        f"Foydalanuvchi: {creator['full_name']} ({creator['phone']})\n"
+        f"Telegram ID: {creator['telegram_id']}\n"
+        f"Holat: {order_data['status']}\n"
+        f"Buyurtma turi: {order_data['order_type']}\n\n"
+        f"📍 Manzil:\n"
+        f"Qayerdan: {content['from_location']['city']}\n"
+        f"Qayerga: {content['to_location']['city']}\n\n"
+        f"🚌 Travel klassi: {content['travel_class']}\n"
+        f"💰 Narxi: {content['price']}\n"
+        f"👥 Yo‘lovchilar soni: {content['passenger']}\n"
+        f"🧕 Ayol yo‘lovchi mavjud: {'Ha' if content['has_woman'] else 'Yo‘q'}\n"
+        f"🕒 Yaratilgan vaqti: {content['created_at']}"
+    )
+    try:
+        bot.send_message(
+            chat_id=int(f"-{env.GROUP_ID}"),  # Guruh ID supergroup formatida
+            text=message,
+            parse_mode="HTML")
+
+    except Exception as e:
+        bot.send_message(
+            chat_id=int(f"-100{env.GROUP_ID}"),
+            text=message,
+        )
+        logger.error(f"Telegram xabari yuborilmadi: {e}")
+
 
 
 @receiver(post_save, sender=PassengerTravel)
@@ -26,17 +67,6 @@ def create_order(sender, instance, created, **kwargs):
     if Order.objects.filter(content_type=content_type, object_id=instance.pk).exists():
         logger.warning(f"Order already exists for {sender.__name__} {instance.pk}")
         return
-
-    # Telegram xabar yuborish funksiyasi
-    def send_message_view(order_pk):
-        try:
-            bot.send_message(
-                int(f"-{env.GROUP_ID}"),  # yoki -100<id> formatda
-                f"Buyurtma ID {order_pk}"
-            )
-        except Exception as e:
-            logger.error(f"Telegram xabari yuborilmadi: {e}")
-
     try:
         order = Order.objects.create(
             user=instance.user,
