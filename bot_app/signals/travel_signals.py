@@ -17,6 +17,8 @@ bot = TeleBot(env.MAIN_BOT)
 
 # Telegram xabar yuborish funksiyasi
 def send_message_view(order_pk):
+    from datetime import datetime
+    import pytz
     from ..serializers.order import OrderSerializer
     from ..models import Order
 
@@ -24,6 +26,19 @@ def send_message_view(order_pk):
     order_data = OrderSerializer(order_n).data
     creator = order_data.get("creator", {})
     content = order_data.get("content_object", {})
+
+    # created_at ni o'qishli formatga o'tkazish
+    created_at_str = content.get('created_at')
+    if created_at_str:
+        try:
+            dt = datetime.fromisoformat(created_at_str.replace("Z", "+00:00"))
+            # Mahalliy vaqt (masalan, Tashkent UTC+5)
+            dt = dt.astimezone(pytz.timezone("Asia/Tashkent"))
+            created_at_formatted = dt.strftime("%d-%m-%Y %H:%M")
+        except Exception:
+            created_at_formatted = created_at_str
+    else:
+        created_at_formatted = "Noma'lum"
 
     message = (
         f"📌 Yangi Buyurtma\n"
@@ -33,27 +48,21 @@ def send_message_view(order_pk):
         f"Holat: {order_data.get('status')}\n"
         f"Buyurtma turi: {order_data.get('order_type')}\n\n"
         f"📍 Manzil:\n"
-        f"Qayerdan: {content.get('from_location', {}).get('city', "").title()}\n"
-        f"Qayerga: {content.get('to_location', {}).get('city', "").title()}\n\n"
-        f"🚌 Travel klassi: {content.get('travel_class', "").title()}\n"
+        f"Qayerdan: {content.get('from_location', {}).get('city')}\n"
+        f"Qayerga: {content.get('to_location', {}).get('city')}\n\n"
+        f"🚌 Travel klassi: {content.get('travel_class')}\n"
         f"💰 Narxi: {content.get('price')}\n"
         f"👥 Yo‘lovchilar soni: {content.get('passenger')}\n"
         f"🧕 Ayol yo‘lovchi mavjud: {'Ha' if content.get('has_woman') else 'Yo‘q'}\n"
-        f"🕒 Yaratilgan vaqti: {content.get('created_at')}"
+        f"🕒 Yaratilgan vaqti: {created_at_formatted}"
     )
 
     try:
         bot.send_message(
-            chat_id=int(f"-{env.GROUP_ID}"),  # Guruh ID supergroup formatida
-            text=message  # parse_mode ishlatilmayapti, oddiy text sifatida yuboriladi
-        )
-    except Exception as e:
-        # Agar xato bo‘lsa,
-        bot.send_message(
-            chat_id=int(f"-100{env.GROUP_ID}"),  # Guruh ID supergroup formatida
+            chat_id=int(f"-{env.GROUP_ID}"),
             text=message
         )
-        # boshqa formatda yuborish yoki logga yozish
+    except Exception as e:
         logger.error(f"Telegram xabari yuborilmadi: {e}")
 
 
