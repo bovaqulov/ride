@@ -18,39 +18,37 @@ bot = TeleBot(env.MAIN_BOT)
 # Telegram xabar yuborish funksiyasi
 def send_message_view(order_pk):
     from ..serializers.order import OrderSerializer
+    from ..models import Order
 
     order_n = Order.objects.get(pk=order_pk)
     order_data = OrderSerializer(order_n).data
-    creator = order_data["creator"]
-    content = order_data["content_object"]
+    creator = order_data.get("creator", {})
+    content = order_data.get("content_object", {})
 
     message = (
-        f"📌 Yangi Buyurtma**\n"
-        f"Buyurtma ID: {order_data['id']}\n"
-        f"Foydalanuvchi: {creator['full_name']} ({creator['phone']})\n"
-        f"Telegram ID: {creator['telegram_id']}\n"
-        f"Holat: {order_data['status']}\n"
-        f"Buyurtma turi: {order_data['order_type']}\n\n"
+        f"📌 Yangi Buyurtma\n"
+        f"Buyurtma ID: {order_data.get('id')}\n"
+        f"Foydalanuvchi: {creator.get('full_name')} ({creator.get('phone')})\n"
+        f"Telegram ID: {creator.get('telegram_id')}\n"
+        f"Holat: {order_data.get('status')}\n"
+        f"Buyurtma turi: {order_data.get('order_type')}\n\n"
         f"📍 Manzil:\n"
-        f"Qayerdan: {content['from_location']['city']}\n"
-        f"Qayerga: {content['to_location']['city']}\n\n"
-        f"🚌 Travel klassi: {content['travel_class']}\n"
-        f"💰 Narxi: {content['price']}\n"
-        f"👥 Yo‘lovchilar soni: {content['passenger']}\n"
-        f"🧕 Ayol yo‘lovchi mavjud: {'Ha' if content['has_woman'] else 'Yo‘q'}\n"
-        f"🕒 Yaratilgan vaqti: {content['created_at']}"
+        f"Qayerdan: {content.get('from_location', {}).get('city', "").title()}\n"
+        f"Qayerga: {content.get('to_location', {}).get('city', "").title()}\n\n"
+        f"🚌 Travel klassi: {content.get('travel_class', "").title()}\n"
+        f"💰 Narxi: {content.get('price')}\n"
+        f"👥 Yo‘lovchilar soni: {content.get('passenger')}\n"
+        f"🧕 Ayol yo‘lovchi mavjud: {'Ha' if content.get('has_woman') else 'Yo‘q'}\n"
+        f"🕒 Yaratilgan vaqti: {content.get('created_at')}"
     )
+
     try:
         bot.send_message(
             chat_id=int(f"-{env.GROUP_ID}"),  # Guruh ID supergroup formatida
-            text=message,
-            parse_mode="HTML")
-
-    except Exception as e:
-        bot.send_message(
-            chat_id=int(f"-100{env.GROUP_ID}"),
-            text=message,
+            text=message  # parse_mode ishlatilmayapti, oddiy text sifatida yuboriladi
         )
+    except Exception as e:
+        # Agar xato bo‘lsa, boshqa formatda yuborish yoki logga yozish
         logger.error(f"Telegram xabari yuborilmadi: {e}")
 
 
