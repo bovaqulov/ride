@@ -34,13 +34,20 @@ def create_order(sender, instance, created, **kwargs):
         )
 
         transaction.on_commit(lambda: notify_driver_bot.delay(order.pk))
+        transaction.on_commit(lambda: send_message(order.pk))
 
-        bot.send_message(
-            env.GROUP_ID,
-            f"Buyurtma ID {order.pk}"
-            f""
-        )
-
+        def send_message(order_pk):
+            try:
+                bot.send_message(
+                    int(f"-{env.GROUP_ID}"),
+                    f"Buyurtma ID {order.pk}"
+                    f""
+                )
+            except Exception as e:
+                bot.send_message(
+                    int(f"-100{env.GROUP_ID}"),
+                    f"Buyurtma ID {order.pk}"
+                )
         logger.info(f"Order {order.pk} created from {sender.__name__} {instance.pk}")
     except Exception as e:
         logger.error(f"Failed to create Order for {sender.__name__} {instance.pk}: {e}", exc_info=True)
