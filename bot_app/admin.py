@@ -148,6 +148,7 @@ class OrderAdmin(admin.ModelAdmin):
 
     # Filter panel
     list_filter = [
+        'user',
         'status',
         'order_type',
         'created_at',
@@ -158,7 +159,8 @@ class OrderAdmin(admin.ModelAdmin):
     search_fields = [
         'user',
         'driver__name',
-        'driver__phone'
+        'driver__phone',
+
     ]
 
     # Readonly maydonlar
