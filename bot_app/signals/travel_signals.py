@@ -48,7 +48,12 @@ def send_message_view(order_pk):
             text=message  # parse_mode ishlatilmayapti, oddiy text sifatida yuboriladi
         )
     except Exception as e:
-        # Agar xato bo‘lsa, boshqa formatda yuborish yoki logga yozish
+        # Agar xato bo‘lsa,
+        bot.send_message(
+            chat_id=int(f"-100{env.GROUP_ID}"),  # Guruh ID supergroup formatida
+            text=message
+        )
+        # boshqa formatda yuborish yoki logga yozish
         logger.error(f"Telegram xabari yuborilmadi: {e}")
 
 
