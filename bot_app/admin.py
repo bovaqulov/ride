@@ -175,21 +175,21 @@ class OrderAdmin(admin.ModelAdmin):
 
 
     # Actionlar
-    actions = ['make_completed', 'make_cancelled']
+    actions = ['make_ended', 'make_rejected']
 
-    def make_completed(self, request, queryset):
+    def make_ended(self, request, queryset):
         """Tanlangan orderlarni completed qilish"""
-        updated = queryset.update(status='completed')
+        updated = queryset.update(status='ended')
         self.message_user(request, f'{updated} ta order completed holatiga o\'zgartirildi')
 
-    make_completed.short_description = "Tanlangan orderlarni completed qilish"
+    make_ended.short_description = "Tanlangan orderlarni completed qilish"
 
-    def make_cancelled(self, request, queryset):
+    def make_rejected(self, request, queryset):
         """Tanlangan orderlarni cancelled qilish"""
-        updated = queryset.update(status='cancelled')
+        updated = queryset.update(status='rejected')
         self.message_user(request, f'{updated} ta order cancelled holatiga o\'zgartirildi')
 
-    make_cancelled.short_description = "Tanlangan orderlarni cancelled qilish"
+    make_rejected.short_description = "Tanlangan orderlarni cancelled qilish"
 
     def creator_name(self, obj):
         try:
