@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 bot = TeleBot(env.MAIN_BOT)
 
+
 @receiver(post_save, sender=PassengerTravel)
 @receiver(post_save, sender=PassengerPost)
 def create_order(sender, instance, created, **kwargs):
@@ -26,6 +27,16 @@ def create_order(sender, instance, created, **kwargs):
         logger.warning(f"Order already exists for {sender.__name__} {instance.pk}")
         return
 
+    # Telegram xabar yuborish funksiyasi
+    def send_message_view(order_pk):
+        try:
+            bot.send_message(
+                int(f"-{env.GROUP_ID}"),  # yoki -100<id> formatda
+                f"Buyurtma ID {order_pk}"
+            )
+        except Exception as e:
+            logger.error(f"Telegram xabari yuborilmadi: {e}")
+
     try:
         order = Order.objects.create(
             user=instance.user,
@@ -33,21 +44,11 @@ def create_order(sender, instance, created, **kwargs):
             content_object=instance
         )
 
+        # Celery task ishga tushishi
         transaction.on_commit(lambda: notify_driver_bot.delay(order.pk))
-        transaction.on_commit(lambda: send_message_view(order.pk))
 
-        def send_message_view(order_pk):
-            try:
-                bot.send_message(
-                    int(f"-{env.GROUP_ID}"),
-                    f"Buyurtma ID {order_pk}"
-                    f""
-                )
-            except Exception as e:
-                bot.send_message(
-                    int(f"-100{env.GROUP_ID}"),
-                    f"Buyurtma ID {order_pk}"
-                )
+        # Telegram xabar yuborish
+        transaction.on_commit(lambda: send_message_view(order.pk))
 
         logger.info(f"Order {order.pk} created from {sender.__name__} {instance.pk}")
     except Exception as e:
