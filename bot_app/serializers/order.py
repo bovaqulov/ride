@@ -33,6 +33,7 @@ class ContentObjectSerializer(serializers.Serializer):
                 'id': instance.pk,
                 'from_location': instance.from_location,
                 'to_location': instance.to_location,
+                'travel_class': "delivery",
                 'price': str(instance.price) if instance.price else None,  # Decimal to string
                 'created_at': instance.created_at.isoformat() if instance.created_at else None  # ISO format
             }
