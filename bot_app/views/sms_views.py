@@ -164,19 +164,41 @@ def auth_sms(request):
     try:
         # Foydalanuvchini telegram_id bo'yicha qidirish
         instance = ModelClass.objects.get(telegram_id=telegram_id)
+        if instance.phone == phone:
+            serializer = SerializerClass(instance, context={'request': request})
 
-        # Serializer bilan data tayyorlash
-        serializer = SerializerClass(instance, context={'request': request})
+            return Response(
+                data={
+                    "status": "error",
+                    "result": serializer.data,
+                    "message": "User already exists",
+                    "telegram_id": telegram_id
+                },
+                status=400
+            )
+        else:
+            try:
+                sms_result = _send_sms(phone)
 
-        return Response(
-            data={
-                "status": "error",
-                "result": serializer.data,
-                "message": "User already exists",
-                "telegram_id": telegram_id
-            },
-            status=400
-        )
+                return Response(
+                    data={
+                        "status": "success",
+                        "result": sms_result,
+                        "message": "SMS sent successfully",
+                        "telegram_id": telegram_id
+                    }
+                )
+
+            except Exception as sms_ex:
+                return Response(
+                    data={
+                        "status": "error",
+                        "message": f"SMS sending failed: {str(sms_ex)}",
+                        "telegram_id": telegram_id
+                    },
+                    status=500
+                )
+
 
     except ModelClass.DoesNotExist:
         # Yangi foydalanuvchi, SMS yuborish
