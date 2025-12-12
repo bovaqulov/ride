@@ -1,5 +1,7 @@
 # filters.py
 import django_filters
+
+from .. import models
 from ..models import Order, TravelStatus, OrderType
 from django.utils import timezone
 from datetime import timedelta
@@ -24,6 +26,9 @@ class OrderFilter(django_filters.FilterSet):
     # Content type filterlari
     content_type = django_filters.CharFilter(method='filter_content_type')
 
+    # travel class
+    travel_class = django_filters.CharFilter(method='filter_travel_class')
+
     # Driver mavjudligi filteri
     has_driver = django_filters.BooleanFilter(method='filter_has_driver')
 
@@ -38,6 +43,12 @@ class OrderFilter(django_filters.FilterSet):
     # User va driver birgalikda
     user_and_driver = django_filters.CharFilter(method='filter_user_and_driver')
 
+    # locationlar bilan ishlash
+    from_city = django_filters.CharFilter(method='filter_from_city')
+    to_city = django_filters.CharFilter(method='filter_to_city')
+
+
+
     class Meta:
         model = Order
         fields = {
@@ -49,9 +60,62 @@ class OrderFilter(django_filters.FilterSet):
             'updated_at': ['gte', 'lte', 'exact'],
         }
 
+    def filter_from_city(self, queryset, name, value):
+        from django.db.models import Q
+        from django.contrib.contenttypes.models import ContentType
+        from ..models import PassengerTravel, PassengerPost
+
+        try:
+            # Get content types
+            travel_content_type = ContentType.objects.get_for_model(PassengerTravel)
+            post_content_type = ContentType.objects.get_for_model(PassengerPost)
+
+            # Get travel objects with matching from_location
+            travel_ids = PassengerTravel.objects.filter(
+                from_location__city__icontains=value
+            ).values_list('id', flat=True)
+
+            # Get post objects with matching from_location
+            post_ids = PassengerPost.objects.filter(
+                from_location__city__icontains=value
+            ).values_list('id', flat=True)
+
+            return queryset.filter(
+                Q(content_type=travel_content_type, object_id__in=travel_ids) |
+                Q(content_type=post_content_type, object_id__in=post_ids)
+            )
+        except Exception as e:
+            # Log the error if needed
+            return queryset.none()
+
+    def filter_to_city(self, queryset, name, value):
+        from django.db.models import Q
+        from django.contrib.contenttypes.models import ContentType
+        from ..models import PassengerTravel, PassengerPost
+
+        try:
+            travel_content_type = ContentType.objects.get_for_model(PassengerTravel)
+            post_content_type = ContentType.objects.get_for_model(PassengerPost)
+
+            travel_ids = PassengerTravel.objects.filter(
+                to_location__city__icontains=value
+            ).values_list('id', flat=True)
+
+            post_ids = PassengerPost.objects.filter(
+                to_location__city__icontains=value
+            ).values_list('id', flat=True)
+
+            return queryset.filter(
+                Q(content_type=travel_content_type, object_id__in=travel_ids) |
+                Q(content_type=post_content_type, object_id__in=post_ids)
+            )
+        except Exception:
+            return queryset.none()
+
     def filter_created_today(self, queryset, name, value):
         if value:
             today = timezone.now().date()
+            print(today)
             return queryset.filter(created_at__date=today)
         return queryset
 
@@ -86,17 +150,30 @@ class OrderFilter(django_filters.FilterSet):
 
     def filter_min_price(self, queryset, name, value):
         if value is not None:
-            # PassengerTravel va PassengerPost dan narxni filter qilish
             from django.db.models import Q
             from django.contrib.contenttypes.models import ContentType
 
-            travel_content_type = ContentType.objects.get_for_model(
-                self.Meta.model.passenger_travel.field.related_model)
-            post_content_type = ContentType.objects.get_for_model(self.Meta.model.passenger_post.field.related_model)
+            # Import your related models
+            from ..models import PassengerTravel, PassengerPost
 
+            # Get content types for the models
+            travel_content_type = ContentType.objects.get_for_model(PassengerTravel)
+            post_content_type = ContentType.objects.get_for_model(PassengerPost)
+
+            # Get all travel objects with price >= value
+            travel_ids = PassengerTravel.objects.filter(
+                price__gte=value
+            ).values_list('id', flat=True)
+
+            # Get all post objects with price >= value
+            post_ids = PassengerPost.objects.filter(
+                price__gte=value
+            ).values_list('id', flat=True)
+
+            # Filter orders that reference these objects
             return queryset.filter(
-                Q(content_type=travel_content_type, passenger_travel__price__gte=value) |
-                Q(content_type=post_content_type, passenger_post__price__gte=value)
+                Q(content_type=travel_content_type, object_id__in=travel_ids) |
+                Q(content_type=post_content_type, object_id__in=post_ids)
             )
         return queryset
 
@@ -105,13 +182,22 @@ class OrderFilter(django_filters.FilterSet):
             from django.db.models import Q
             from django.contrib.contenttypes.models import ContentType
 
-            travel_content_type = ContentType.objects.get_for_model(
-                self.Meta.model.passenger_travel.field.related_model)
-            post_content_type = ContentType.objects.get_for_model(self.Meta.model.passenger_post.field.related_model)
+            from ..models import PassengerTravel, PassengerPost
+
+            travel_content_type = ContentType.objects.get_for_model(PassengerTravel)
+            post_content_type = ContentType.objects.get_for_model(PassengerPost)
+
+            travel_ids = PassengerTravel.objects.filter(
+                price__lte=value
+            ).values_list('id', flat=True)
+
+            post_ids = PassengerPost.objects.filter(
+                price__lte=value
+            ).values_list('id', flat=True)
 
             return queryset.filter(
-                Q(content_type=travel_content_type, passenger_travel__price__lte=value) |
-                Q(content_type=post_content_type, passenger_post__price__lte=value)
+                Q(content_type=travel_content_type, object_id__in=travel_ids) |
+                Q(content_type=post_content_type, object_id__in=post_ids)
             )
         return queryset
 
@@ -124,6 +210,33 @@ class OrderFilter(django_filters.FilterSet):
                 return queryset.none()
         return queryset
 
+    def filter_travel_class(self, queryset, name, value):
+        from django.db.models import Q
+        from django.contrib.contenttypes.models import ContentType
+        from ..models import PassengerTravel, PassengerPost
+
+        if value:
+            try:
+                travel_content_type = ContentType.objects.get_for_model(PassengerTravel)
+                post_content_type = ContentType.objects.get_for_model(PassengerPost)
+
+                # Get travel objects with matching travel_class
+                travel_ids = PassengerTravel.objects.filter(
+                    travel_class=value
+                ).values_list('id', flat=True)
+
+                posts_ids = PassengerPost.objects.all().values_list('id', flat=True)
+
+                # Return orders that reference these travel objects
+                return queryset.filter(
+                    Q(content_type=travel_content_type,
+                    object_id__in=travel_ids) |
+                    Q(content_type=post_content_type,
+                      object_id__in=posts_ids)
+                )
+            except (ValueError, TypeError):
+                return queryset.none()
+        return queryset
 
 class OrderSearchFilter(django_filters.FilterSet):
     """Qidiruv uchun alohida filter"""
@@ -135,7 +248,6 @@ class OrderSearchFilter(django_filters.FilterSet):
 
     def filter_search(self, queryset, name, value):
         from django.db.models import Q
-        from django.contrib.contenttypes.models import ContentType
 
         if value:
             # User ID bo'yicha qidirish
