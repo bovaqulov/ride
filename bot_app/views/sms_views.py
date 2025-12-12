@@ -164,7 +164,8 @@ def auth_sms(request):
     try:
         # Foydalanuvchini telegram_id bo'yicha qidirish
         instance = ModelClass.objects.get(telegram_id=telegram_id)
-        if instance.phone == phone:
+
+        if str(instance.phone) == str(phone):
             serializer = SerializerClass(instance, context={'request': request})
 
             return Response(
