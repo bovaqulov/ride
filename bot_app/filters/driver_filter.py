@@ -41,10 +41,20 @@ class DriverFilter(filters.FilterSet):
         )
 
     def filter_by_car_class(self, queryset, name, value):
-        if isinstance(value, (list, tuple, set)):
-            return queryset.filter(driver__car_class__in=value)
+        """
+        economy  -> economy
+        standard -> standard, comfort
+        comfort  -> comfort
+        """
 
-        return queryset.filter(driver__car_class=value)
+        if isinstance(value, (list, tuple, set)):
+            return queryset.filter(
+                driver__car_class__in=value
+            ).distinct()
+
+        return queryset.filter(
+            driver__car_class=value
+        ).distinct()
 
     def filter_exclude_busy(self, queryset, name, value):
         """Faol orderlari 4 tadan ortiq bo'lgan driverlarni chiqarib tashlash"""
