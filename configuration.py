@@ -29,6 +29,8 @@ class EventSettings(BaseSettings):
     GROUP_ID: int = 4817936909
     MAIN_BOT: str = None
 
+    # DRIVER_BOT_USERNAME: str = "https://t.me/Gozzdriverbot"
+
     class Config:
         env_file = ".env"
 

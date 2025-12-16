@@ -23,7 +23,6 @@ class BotClient(models.Model):
         return self.full_name
 
     class Meta:
-        ordering = ['-created_at']
         verbose_name_plural = "Bot foydalanuvchilari"
         verbose_name = "Bot foydalanuvchisi"
 
@@ -120,7 +119,7 @@ class DriverStatus(models.TextChoices):
 
 
 class Driver(models.Model):
-    telegram_id = models.BigIntegerField(unique=True)
+    telegram_id = models.BigIntegerField(unique=True, null=True, blank=True)
     full_name = models.CharField(max_length=200, default='')
     total_rides = models.IntegerField(default=0)
     phone = models.CharField(max_length=50, unique=True, null=True, blank=True)
@@ -234,9 +233,6 @@ class OrderType(models.TextChoices):
 
 
 class Order(models.Model):
-    """
-    Buyurtma modeli. Generic relation orqali turli xil obyektlarga bog'lanishi mumkin.
-    """
     user = models.BigIntegerField()
     driver = models.ForeignKey('Driver', on_delete=models.SET_NULL, null=True, blank=True)
     status = models.CharField(max_length=10, choices=TravelStatus.choices, default=TravelStatus.CREATED)
@@ -258,20 +254,17 @@ class Order(models.Model):
         return f"Order #{self.pk} - User: {self.user}"
 
     def clean(self):
-        """Modelni saqlashdan oldin validatsiya"""
         super().clean()
-
-        # Agar driver bor bo'lsa va status "CREATED" dan boshqa bo'lsa
         if self.driver and self.pk:
             try:
                 old_order = Order.objects.get(pk=self.pk)
                 if old_order.driver and old_order.driver != self.driver:
-                    # O'zgarmaslik kerak - faqat log yozish
+
                     logger.warning(
                         f"Order {self.pk} driver o'zgartirishga urinish: "
                         f"Eski driver: {old_order.driver.pk}, Yangi driver: {self.driver.pk}"
                     )
-                    # Driver'ni eski holatiga qaytarish
+
                     self.driver = old_order.driver
             except Order.DoesNotExist:
                 pass

@@ -88,6 +88,11 @@ class DriverAdmin(admin.ModelAdmin):
     def new_full_name(self, obj):
         return f"{obj.full_name}({obj.telegram_id})"
 
+
+    # def user_link(self, obj):
+    #     return f"{env.DRIVER_BOT_USERNAME}/start={obj.id * 111}{obj.created_at}"
+
+
 # CityPrice uchun inline
 class CityPriceInline(admin.StackedInline):
     model = CityPrice
