@@ -11,7 +11,7 @@ class DriverFilter(filters.FilterSet):
     from_location = filters.CharFilter(field_name='from_location__title', lookup_expr='icontains')
     to_location = filters.CharFilter(field_name='to_location__title', lookup_expr='icontains')
     phone = filters.CharFilter(field_name="phone", lookup_expr='icontains')
-    telegram_id = filters.CharFilter(lookup_expr='icontains')
+    telegram_id = filters.CharFilter(field_name="telegram_id", lookup_expr='icontains')
 
     # Range filterlar
     min_amount = filters.NumberFilter(field_name='amount', lookup_expr='gte')
