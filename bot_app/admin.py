@@ -105,7 +105,7 @@ class DriverAdmin(admin.ModelAdmin):
         key = env.ENCRYPTION_KEY.strip()  # bo'shliqlarni olib tashlash
         fernet = Fernet(key.encode('utf-8'))
         encrypted_id = fernet.encrypt(str(obj.id).encode('utf-8')).decode('utf-8')
-        return f"https://t.me/{env.DRIVER_BOT_USERNAME}?start={encrypted_id}"
+        return f"{env.DRIVER_BOT_USERNAME}?start={encrypted_id}"
 
     user_link.short_description = "Bot havolasi"
 
