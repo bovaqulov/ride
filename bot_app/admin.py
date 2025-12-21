@@ -78,7 +78,7 @@ class DriverGalleryInline(admin.StackedInline):
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
     list_display = ("new_full_name", "car_info", "phone", "status", "locations", "amount")
-    list_filter = ("phone",)
+    list_filter = ("phone", "status")
     search_fields = ("telegram_id", "phone")
     list_editable = ("amount", "status")
     inlines = [DriverGalleryInline, CarInline, DriverTransactionInline]
@@ -97,6 +97,7 @@ class DriverAdmin(admin.ModelAdmin):
             return f"{cars.car_model}({cars.car_number})"
         except Exception as e:
             print(e)
+            return ""
 
     # def user_link(self, obj):
     #     return f"{env.DRIVER_BOT_USERNAME}/start={obj.id * 111}{obj.created_at}"
