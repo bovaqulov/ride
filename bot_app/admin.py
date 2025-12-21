@@ -1,11 +1,13 @@
 from django.contrib import admin
 
-from configuration import env
 from .models import (
     BotClient, PassengerTravel, PassengerPost,
     Driver, Car, DriverTransaction, City, Order, Passenger, DriverGallery, CityPrice
 )
 
+admin.site.site_header = "Taxi Bot Admin"
+admin.site.site_title = "Taxi Bot Administration"
+admin.site.index_title = "Boshqaruv paneliga xush kelibsiz"
 
 @admin.register(BotClient)
 class BotClientAdmin(admin.ModelAdmin):
