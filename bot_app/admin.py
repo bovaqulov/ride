@@ -78,7 +78,7 @@ class DriverGalleryInline(admin.StackedInline):
 
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
-    list_display = ("new_full_name", "car_info", "phone", "status", "locations", "amount", "user_link")
+    list_display = ("new_full_name", "car_info", "phone", "status", "locations", "amount",)
     list_filter = ("phone", "status")
     search_fields = ("telegram_id", "phone")
     list_editable = ("amount", "status")
@@ -100,14 +100,6 @@ class DriverAdmin(admin.ModelAdmin):
             print(e)
             return ""
 
-    def user_link(self, obj):
-        from cryptography.fernet import Fernet
-        key = env.ENCRYPTION_KEY.strip()  # bo'shliqlarni olib tashlash
-        fernet = Fernet(key.encode('utf-8'))
-        encrypted_id = fernet.encrypt(str(obj.id).encode('utf-8')).decode('utf-8')
-        return f"{env.DRIVER_BOT_USERNAME}?start={encrypted_id}"
-
-    user_link.short_description = "Bot havolasi"
 
 # CityPrice uchun inline
 class CityPriceInline(admin.StackedInline):
