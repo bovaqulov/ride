@@ -86,7 +86,7 @@ class DriverAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
     def locations(self, obj):
-        return f"{obj.from_location.title()} -> {obj.to_location.title()}"
+        return f"{obj.from_location} -> {obj.to_location}"
 
     def new_full_name(self, obj):
         return f"{obj.full_name}({obj.telegram_id})"
