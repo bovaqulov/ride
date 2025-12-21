@@ -10,7 +10,7 @@ class DriverFilter(filters.FilterSet):
     status = filters.ChoiceFilter(choices=DriverStatus.choices)
     from_location = filters.CharFilter(field_name='from_location__title', lookup_expr='icontains')
     to_location = filters.CharFilter(field_name='to_location__title', lookup_expr='icontains')
-    phone = filters.CharFilter(lookup_expr='icontains')
+    phone = filters.CharFilter(field_name="phone", lookup_expr='icontains')
     telegram_id = filters.CharFilter(lookup_expr='icontains')
 
     # Range filterlar
