@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 import dj_database_url
 from pydantic_settings import BaseSettings
@@ -30,6 +30,8 @@ class EventSettings(BaseSettings):
     MAIN_BOT: str = None
 
     DRIVER_BOT_USERNAME: str = "https://t.me/Gozzdriverbot"
+
+    ENCRYPTION_KEY: Optional[str] = None
 
     class Config:
         env_file = ".env"

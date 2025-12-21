@@ -1,5 +1,6 @@
 from django.contrib import admin
 
+from configuration import env
 from .models import (
     BotClient, PassengerTravel, PassengerPost,
     Driver, Car, DriverTransaction, City, Order, Passenger, DriverGallery, CityPrice
@@ -8,7 +9,7 @@ from .models import (
 
 @admin.register(BotClient)
 class BotClientAdmin(admin.ModelAdmin):
-    list_display = ("id", "new_full_name", "username", "language", "is_banned", "created_at")
+    list_display = ("id", "new_full_name", "username", "language", "is_banned")
     list_filter = ("is_banned", "language", "created_at")
     search_fields = ("full_name", "username", "telegram_id")
     list_editable = ("is_banned",)
@@ -77,7 +78,7 @@ class DriverGalleryInline(admin.StackedInline):
 
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
-    list_display = ("new_full_name", "car_info", "phone", "status", "locations", "amount")
+    list_display = ("new_full_name", "car_info", "phone", "status", "locations", "amount", "user_link")
     list_filter = ("phone", "status")
     search_fields = ("telegram_id", "phone")
     list_editable = ("amount", "status")
@@ -99,8 +100,20 @@ class DriverAdmin(admin.ModelAdmin):
             print(e)
             return ""
 
-    # def user_link(self, obj):
-    #     return f"{env.DRIVER_BOT_USERNAME}/start={obj.id * 111}{obj.created_at}"
+    def user_link(self, obj):
+        from cryptography.fernet import Fernet
+        key = env.ENCRYPTION_KEY
+
+        if isinstance(key, str):
+            key = key.encode()
+
+        fernet = Fernet(key)
+
+        def encrypt_id(id_value):
+            """ID ni shifrlaydi (masalan, 123 -> gAAAAAB... )"""
+            return fernet.encrypt(str(id_value).encode()).decode()
+
+        return f"{env.DRIVER_BOT_USERNAME}/start={encrypt_id(obj.id)}"
 
 
 # CityPrice uchun inline
