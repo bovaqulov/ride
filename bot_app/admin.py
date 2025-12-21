@@ -77,13 +77,16 @@ class DriverGalleryInline(admin.StackedInline):
 
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
-    list_display = ("id", "new_full_name", "phone", "status", "from_location", "to_location", "amount", "created_at")
+    list_display = ("new_full_name", "car_info", "phone", "status", "locations", "amount")
     list_filter = ("phone",)
-    search_fields = ("telegram_id", "from_location", "to_location")
+    search_fields = ("telegram_id", "phone")
     list_editable = ("amount", "status")
     inlines = [DriverGalleryInline, CarInline, DriverTransactionInline]
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
+
+    def locations(self, obj):
+        return f"{obj.from_location.title()} -> {obj.to_location.title()}"
 
     def new_full_name(self, obj):
         return f"{obj.full_name}({obj.telegram_id})"
