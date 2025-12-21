@@ -77,10 +77,10 @@ class DriverGalleryInline(admin.StackedInline):
 
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
-    list_display = ("id", "new_full_name", "from_location", "to_location", "amount", "created_at")
-    list_filter = ("created_at",)
+    list_display = ("id", "new_full_name", "phone", "from_location", "to_location", "amount", "created_at")
+    list_filter = ("phone",)
     search_fields = ("telegram_id", "from_location", "to_location")
-    list_editable = ("amount",)
+    list_editable = ("amount", "status")
     inlines = [DriverGalleryInline, CarInline, DriverTransactionInline]
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
@@ -88,6 +88,12 @@ class DriverAdmin(admin.ModelAdmin):
     def new_full_name(self, obj):
         return f"{obj.full_name}({obj.telegram_id})"
 
+    def car_info(self, obj):
+        try:
+            cars = Car.objects.filter(driver_id=obj.id).first()
+            return f"{cars.car_model}({cars.car_number})"
+        except Exception as e:
+            print(e)
 
     # def user_link(self, obj):
     #     return f"{env.DRIVER_BOT_USERNAME}/start={obj.id * 111}{obj.created_at}"
