@@ -102,19 +102,12 @@ class DriverAdmin(admin.ModelAdmin):
 
     def user_link(self, obj):
         from cryptography.fernet import Fernet
-        key = env.ENCRYPTION_KEY
+        key = env.ENCRYPTION_KEY.strip()  # bo'shliqlarni olib tashlash
+        fernet = Fernet(key.encode('utf-8'))
+        encrypted_id = fernet.encrypt(str(obj.id).encode('utf-8')).decode('utf-8')
+        return f"https://t.me/{env.DRIVER_BOT_USERNAME}?start={encrypted_id}"
 
-        if isinstance(key, str):
-            key = key.encode()
-
-        fernet = Fernet(key)
-
-        def encrypt_id(id_value):
-            """ID ni shifrlaydi (masalan, 123 -> gAAAAAB... )"""
-            return fernet.encrypt(str(id_value).encode()).decode()
-
-        return f"{env.DRIVER_BOT_USERNAME}/start={encrypt_id(obj.id)}"
-
+    user_link.short_description = "Bot havolasi"
 
 # CityPrice uchun inline
 class CityPriceInline(admin.StackedInline):
