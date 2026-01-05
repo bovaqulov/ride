@@ -79,6 +79,8 @@ class Journey(models.Model):
     from_location = models.JSONField(default=default_location)
     to_location = models.JSONField(default=default_location)
     price = models.IntegerField(default=0)
+    commit = models.TextField(default="")
+    start_time = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -119,8 +121,8 @@ class DriverStatus(models.TextChoices):
 
 
 class Driver(models.Model):
-    telegram_id = models.BigIntegerField(unique=True, null=True, blank=True)
-    full_name = models.CharField(max_length=200, default='')
+    telegram_id = models.BigIntegerField(unique=True, null=True, blank=True, verbose_name="Telegram ID")
+    full_name = models.CharField(max_length=200, default='', verbose_name="Haydovchi ismi")
     total_rides = models.IntegerField(default=0)
     phone = models.CharField(max_length=50, unique=True, null=True, blank=True)
     rating = models.IntegerField(default=5)
@@ -142,8 +144,8 @@ class Driver(models.Model):
         null=True,  # Add this if default=None
         blank=True
     )
-    status = models.CharField(max_length=10, choices=DriverStatus.choices, default=DriverStatus.OFFLINE)
-    amount = models.IntegerField(default=150000)
+    status = models.CharField(max_length=10, choices=DriverStatus.choices, default=DriverStatus.OFFLINE, verbose_name="Haydovchi xolati")
+    amount = models.IntegerField(default=150000, verbose_name="Haudovchi mablag'i")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

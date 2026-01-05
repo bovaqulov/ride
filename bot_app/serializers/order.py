@@ -24,6 +24,8 @@ class ContentObjectSerializer(serializers.Serializer):
                 'rate': instance.rate,
                 'passenger': instance.passenger,
                 'has_woman': instance.has_woman,
+                'commit': instance.commit,
+                'start_time': instance.start_time,
                 'price': str(instance.price) if instance.price else None,  # Decimal to string
                 'created_at': instance.created_at.isoformat() if instance.created_at else None  # ISO format
             }
@@ -31,6 +33,8 @@ class ContentObjectSerializer(serializers.Serializer):
             return {
                 'type': 'passengerpost',
                 'id': instance.pk,
+                'commit': instance.commit,
+                'start_time': instance.start_time,
                 'from_location': instance.from_location,
                 'to_location': instance.to_location,
                 'travel_class': "delivery",
@@ -55,7 +59,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'user', 'creator', 'driver', 'driver_details', 'status',
+            'id', 'user', 'start_time', 'commit', 'creator', 'driver', 'driver_details', 'status',
             'order_type', 'content_object', 'content_type_name',
         ]
         read_only_fields = ['id', 'content_object']
@@ -96,7 +100,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['user', 'order_type', 'content_type', 'object_id']
+        fields = ['user','start_time', 'commit', 'order_type', 'content_type', 'object_id']
 
     def validate(self, attrs):
         content_type_name = attrs.get('content_type')
@@ -157,7 +161,7 @@ class OrderListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'user', 'creator', 'driver', 'driver_details', 'status', 'order_type', 'object_id',
+            'id', 'user', 'start_time', 'commit', 'creator', 'driver', 'driver_details', 'status', 'order_type', 'object_id',
         ]
 
     def get_driver_details(self, obj):

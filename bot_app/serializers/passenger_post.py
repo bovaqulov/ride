@@ -13,7 +13,7 @@ class PassengerPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = PassengerPost
         fields = [
-            'id', 'creator', 'order_id', 'from_location', 'to_location', 'price'
+            'id', 'creator', 'commit', 'start_time', 'order_id', 'from_location', 'to_location', 'price'
         ]
         read_only_fields = ['id']
 
@@ -43,7 +43,7 @@ class PassengerPostCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PassengerPost
-        fields = ['user', 'creator', 'from_location', 'to_location', 'price']
+        fields = ['user', 'creator','commit', 'start_time', 'from_location', 'to_location', 'price']
 
     def get_creator(self, obj):
         """Get creator after object is created"""
@@ -65,7 +65,7 @@ class PassengerPostListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PassengerPost
-        fields = ['id', 'user', 'creator', 'from_location', 'to_location', 'price']
+        fields = ['id', 'user', 'creator','commit', 'start_time', 'from_location', 'to_location', 'price']
 
     def get_creator(self, obj):
         """Get creator after object is created"""

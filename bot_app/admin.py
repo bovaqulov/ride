@@ -1,4 +1,6 @@
+
 from django.contrib import admin
+from django.utils.safestring import mark_safe
 
 from .models import (
     BotClient, PassengerTravel, PassengerPost,
@@ -11,53 +13,159 @@ admin.site.index_title = "Boshqaruv paneliga xush kelibsiz"
 
 @admin.register(BotClient)
 class BotClientAdmin(admin.ModelAdmin):
-    list_display = ("id", "new_full_name", "username", "language", "is_banned")
+    list_display = ("new_full_name", "username", "language", "is_banned")
     list_filter = ("is_banned", "language", "created_at")
     search_fields = ("full_name", "username", "telegram_id")
     list_editable = ("is_banned",)
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
 
+
     def new_full_name(self, obj):
         return f"{obj.full_name}({obj.telegram_id})"
+
+    new_full_name.short_description = "Ism"
 
 @admin.register(PassengerTravel)
 class PassengerTravelAdmin(admin.ModelAdmin):
     list_display = [
-        'id',
         'creator_name',
-        'rate',
+        "get_start_time",
+        'get_locations',
         'price',
-        'created_at'
+        'commit',
+        'passenger',
+        'has_woman',
+        "commit",
+
     ]
 
     list_filter = ['travel_class', 'has_woman', 'created_at']
     search_fields = ['user', ]
     readonly_fields = ['created_at', 'updated_at']
 
+    # start_time uchun custom metod
+    def get_start_time(self, obj):
+        if obj.start_time:
+            try:
+                # timezone aware bo'lsa
+                from django.utils import timezone
+                if timezone.is_aware(obj.start_time):
+                    return timezone.localtime(obj.start_time).strftime("%Y-%m-%d %H:%M")
+                return obj.start_time.strftime("%Y-%m-%d %H:%M")
+            except (AttributeError, ValueError):
+                return "Xato"
+        return "Belgilanmagan"
+
+    get_start_time.short_description = "Boshlanish vaqti"
+    get_start_time.admin_order_field = 'start_time'
+
     def creator_name(self, obj):
         try:
             client = BotClient.objects.get(telegram_id=obj.user)
             return f"{client.full_name}({obj.user})"
-        except BotClient.DoesNotExist:
-            return obj.user
+        except (BotClient.DoesNotExist, ImportError):
+            return str(obj.user)
+
+    creator_name.short_description = "Pochta egasi"
+
+    def get_locations(self, obj):
+        try:
+            # JSON fielddan ma'lumot olish
+            from_location = obj.from_location
+            to_location = obj.to_location
+
+            # Agar dict bo'lsa
+            if isinstance(from_location, dict) and isinstance(to_location, dict):
+                from_city = from_location.get('city', '')
+                to_city = to_location.get('city', '')
+                return f"{from_city} → {to_city}"
+
+            # Agar string bo'lsa
+            return f"{from_location} → {to_location}"
+        except Exception as e:
+            return f"Xato: {str(e)}"
+
+    get_locations.short_description = "Yo'nalish"
+
+    # Admin change form uchun
+    fieldsets = (
+        ("Asosiy ma'lumotlar", {
+            'fields': ('user', 'price', 'start_time', 'commit')
+        }),
+        ("Lokatsiyalar", {
+            'fields': ('from_location', 'to_location')
+        }),
+        ("Vaqt belgilari", {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
+
 
 @admin.register(PassengerPost)
 class PassengerPostAdmin(admin.ModelAdmin):
-    list_display = ("id", "creator_name", "from_location", "to_location", "price", "created_at")
-    list_filter = ("created_at",)
-    search_fields = ("from_location", "to_location", "user")
+    list_display = ("id", "creator_name", "price", "commit", "get_start_time", "get_locations", "created_at")
+    search_fields = ("user", "commit")
     list_editable = ("price",)
-    readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
+    list_filter = ("start_time",)  # Agar start_time None bo'lsa, bu filterda muammo bo'lishi mumkin
+
+    # start_time uchun custom metod
+    def get_start_time(self, obj):
+        if obj.start_time:
+            try:
+                # timezone aware bo'lsa
+                from django.utils import timezone
+                if timezone.is_aware(obj.start_time):
+                    return timezone.localtime(obj.start_time).strftime("%Y-%m-%d %H:%M")
+                return obj.start_time.strftime("%Y-%m-%d %H:%M")
+            except (AttributeError, ValueError):
+                return "Xato"
+        return "Belgilanmagan"
+
+    get_start_time.short_description = "Boshlanish vaqti"
+    get_start_time.admin_order_field = 'start_time'
 
     def creator_name(self, obj):
         try:
             client = BotClient.objects.get(telegram_id=obj.user)
             return f"{client.full_name}({obj.user})"
-        except BotClient.DoesNotExist:
-            return obj.user
+        except (BotClient.DoesNotExist, ImportError):
+            return str(obj.user)
 
+    creator_name.short_description = "Pochta egasi"
+
+    def get_locations(self, obj):
+        try:
+            # JSON fielddan ma'lumot olish
+            from_location = obj.from_location
+            to_location = obj.to_location
+
+            # Agar dict bo'lsa
+            if isinstance(from_location, dict) and isinstance(to_location, dict):
+                from_city = from_location.get('city', '')
+                to_city = to_location.get('city', '')
+                return f"{from_city} → {to_city}"
+
+            # Agar string bo'lsa
+            return f"{from_location} → {to_location}"
+        except Exception as e:
+            return f"Xato: {str(e)}"
+
+    get_locations.short_description = "Yo'nalish"
+
+    # Admin change form uchun
+    fieldsets = (
+        ("Asosiy ma'lumotlar", {
+            'fields': ('user', 'price', 'start_time', 'commit')
+        }),
+        ("Lokatsiyalar", {
+            'fields': ('from_location', 'to_location')
+        }),
+        ("Vaqt belgilari", {
+            'fields': ('created_at', 'updated_at')
+        }),
+    )
 
 class CarInline(admin.TabularInline):
     model = Car
@@ -89,18 +197,26 @@ class DriverAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
 
     def locations(self, obj):
-        return f"{obj.from_location} -> {obj.to_location}"
+        from_location: City = obj.from_location
+        to_location: City = obj.to_location
+        return f"{from_location.title.title()} → {to_location.title.title()}"
+
+    locations.short_description = "Yo'nalish"
 
     def new_full_name(self, obj):
         return f"{obj.full_name}({obj.telegram_id})"
 
+    new_full_name.short_description = "Ism"
+
     def car_info(self, obj):
         try:
             cars = Car.objects.filter(driver_id=obj.id).first()
-            return f"{cars.car_model}({cars.car_number})"
+            return mark_safe(f"<b>{cars.car_model}({cars.car_number})</b>")
         except Exception as e:
             print(e)
             return ""
+
+    car_info.short_description = mark_safe("<b>Avtomobil ma'lumotlari</b>")
 
 
 # CityPrice uchun inline
@@ -138,14 +254,6 @@ class CityAdmin(admin.ModelAdmin):
     get_subcategory.short_description = "Subkategoriya"
 
 
-# CityPrice alohida admin (ixtiyoriy)
-@admin.register(CityPrice)
-class CityPriceAdmin(admin.ModelAdmin):
-    list_display = ['city', 'economy', 'comfort', 'standard']
-    search_fields = ['city__title']
-
-
-
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
@@ -155,25 +263,20 @@ class OrderAdmin(admin.ModelAdmin):
         'creator_name',
         'order_type',
         'status',
-        'driver',
-        'content_type',
-        'object_id',
-        'created_at'
+        'driver'
     ]
 
     # Filter panel
     list_filter = [
         'user',
         'status',
-        'order_type',
-        'created_at',
         'driver'
     ]
 
     # Qidiruv maydonlari
     search_fields = [
         'user',
-        'driver__name',
+        'driver__full_name',
         'driver__phone',
 
     ]
@@ -214,6 +317,8 @@ class OrderAdmin(admin.ModelAdmin):
             return f"{client.full_name}({obj.user})"
         except BotClient.DoesNotExist:
             return obj.user
+
+    creator_name.short_description = "buyurtma egasi"
 
 @admin.register(Passenger)
 class PassengerAdmin(admin.ModelAdmin):
@@ -287,4 +392,3 @@ class PassengerAdmin(admin.ModelAdmin):
             return ['telegram_id', 'created_at', 'updated_at']
         else:  # yangi yaratish
             return ['created_at', 'updated_at']
-

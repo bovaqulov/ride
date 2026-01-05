@@ -15,7 +15,7 @@ class PassengerTravelSerializer(serializers.ModelSerializer):
     class Meta:
         model = PassengerTravel
         fields = [
-            'id', 'user', 'creator', 'order_id', 'rate', 'from_location', 'to_location',
+            'id', 'user','commit', 'start_time', 'creator', 'order_id', 'rate', 'from_location', 'to_location',
             'from_city', 'to_city', 'travel_class', 'passenger',
             'price', 'has_woman', "created_at"
         ]
@@ -58,7 +58,7 @@ class PassengerTravelCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PassengerTravel
         fields = [
-            'user', 'from_location', 'to_location', 'travel_class',
+            'user','commit', 'start_time', 'from_location', 'to_location', 'travel_class',
             'passenger', 'price', 'has_woman'
         ]
 
