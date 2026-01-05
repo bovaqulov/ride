@@ -59,7 +59,7 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'user', 'start_time', 'commit', 'creator', 'driver', 'driver_details', 'status',
+            'id', 'user', 'creator', 'driver', 'driver_details', 'status',
             'order_type', 'content_object', 'content_type_name',
         ]
         read_only_fields = ['id', 'content_object']
@@ -100,7 +100,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ['user','start_time', 'commit', 'order_type', 'content_type', 'object_id']
+        fields = ['user', 'order_type', 'content_type', 'object_id']
 
     def validate(self, attrs):
         content_type_name = attrs.get('content_type')
@@ -161,7 +161,7 @@ class OrderListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'user', 'start_time', 'commit', 'creator', 'driver', 'driver_details', 'status', 'order_type', 'object_id',
+            'id', 'user', 'creator', 'driver', 'driver_details', 'status', 'order_type', 'object_id',
         ]
 
     def get_driver_details(self, obj):

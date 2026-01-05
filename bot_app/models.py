@@ -270,3 +270,9 @@ class Order(models.Model):
                     self.driver = old_order.driver
             except Order.DoesNotExist:
                 pass
+
+            """
+            ALTER TABLE your_table_name
+ADD COLUMN commit TEXT DEFAULT '',
+ADD COLUMN start_time TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+            """
