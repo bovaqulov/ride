@@ -156,12 +156,13 @@ class OrderUpdateSerializer(serializers.ModelSerializer):
 
 class OrderListSerializer(serializers.ModelSerializer):
     driver_details = serializers.SerializerMethodField()
+    content_object = ContentObjectSerializer(read_only=True)
     creator = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
         fields = [
-            'id', 'user', 'creator', 'driver', 'driver_details', 'status', 'order_type', 'object_id',
+            'id', 'user', 'creator', 'content_object', 'driver', 'driver_details', 'status', 'order_type', 'object_id',
         ]
 
     def get_driver_details(self, obj):

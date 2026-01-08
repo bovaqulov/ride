@@ -80,7 +80,7 @@ class Journey(models.Model):
     to_location = models.JSONField(default=default_location)
     price = models.IntegerField(default=0)
     commit = models.TextField(default="")
-    start_time = models.DateTimeField(auto_now_add=True)
+    start_time = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -270,9 +270,3 @@ class Order(models.Model):
                     self.driver = old_order.driver
             except Order.DoesNotExist:
                 pass
-
-            """
-            ALTER TABLE your_table_name
-ADD COLUMN commit TEXT DEFAULT '',
-ADD COLUMN start_time TIMESTAMP WITH TIME ZONE DEFAULT NOW();
-            """
