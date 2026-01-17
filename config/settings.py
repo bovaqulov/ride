@@ -175,7 +175,9 @@ REDOC_SETTINGS = {
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://ride-production-62e7.up.railway.app"
+    "https://ride-production-62e7.up.railway.app",
+    "https://0c4ce2d8ee4f.ngrok-free.app",
+    "https://uneradicative-lamont-undistractingly.ngrok-free.dev"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True

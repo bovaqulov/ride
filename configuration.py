@@ -51,7 +51,9 @@ class EventSettings(BaseSettings):
         return [
             '127.0.0.1',
             "0.0.0.0",
-            "ride-production-62e7.up.railway.app"
+            "ride-production-62e7.up.railway.app",
+            "0c4ce2d8ee4f.ngrok-free.app",
+            "uneradicative-lamont-undistractingly.ngrok-free.dev"
         ]
 
     @property

@@ -4,7 +4,7 @@ from django.utils.safestring import mark_safe
 
 from .models import (
     BotClient, PassengerTravel, PassengerPost,
-    Driver, Car, DriverTransaction, City, Order, Passenger, DriverGallery, CityPrice
+    Driver, Car, DriverTransaction, City, Order, Passenger, DriverGallery, CityPrice, Route, Tariff, RouteCashback
 )
 
 admin.site.site_header = "Taxi Bot Admin"
@@ -172,7 +172,6 @@ class CarInline(admin.TabularInline):
     extra = 1
     readonly_fields = ("created_at", "updated_at")
 
-
 class DriverTransactionInline(admin.TabularInline):
     model = DriverTransaction
     extra = 1
@@ -218,15 +217,10 @@ class DriverAdmin(admin.ModelAdmin):
 
     car_info.short_description = mark_safe("<b>Avtomobil ma'lumotlari</b>")
 
+@admin.register(CityPrice)
+class CityPriceInline(admin.ModelAdmin):
+    list_display = ("route", "price")
 
-# CityPrice uchun inline
-class CityPriceInline(admin.StackedInline):
-    model = CityPrice
-    extra = 1
-    can_delete = False  # O'chirishni o'chirib qo'yish
-
-
-# City admini
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):
     # Ro'yxat ko'rinishi
@@ -244,16 +238,12 @@ class CityAdmin(admin.ModelAdmin):
         'is_allowed'
     ]
 
-    # Inline lar
-    inlines = [CityPriceInline]
 
     # Qo'shimcha funksiyalar
     def get_subcategory(self, obj):
         return obj.subcategory.title if obj.subcategory else "-"
 
     get_subcategory.short_description = "Subkategoriya"
-
-
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
@@ -392,3 +382,17 @@ class PassengerAdmin(admin.ModelAdmin):
             return ['telegram_id', 'created_at', 'updated_at']
         else:  # yangi yaratish
             return ['created_at', 'updated_at']
+
+@admin.register(Tariff)
+class TariffInline(admin.ModelAdmin):
+    list_display = ('title', 'is_active')
+
+
+@admin.register(Route)
+class RouteAdmin(admin.ModelAdmin):
+    list_display = ("from_city", "to_city", 'is_active')
+
+
+@admin.register(RouteCashback)
+class AdminSettingsAdmin(admin.ModelAdmin):
+    list_display = ("order_cashback",)

@@ -1,5 +1,5 @@
 from asgiref.sync import async_to_sync, sync_to_async
-from django.db.models import Q, Prefetch
+from django.db.models import Q
 from rest_framework import viewsets, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -12,7 +12,6 @@ from ..filters.city_filters import CityFilter
 from ..models import City, CityPrice
 from ..serializers.city import (
     CitySerializer,
-    CityCreateSerializer,
     LocationCheckSerializer,
     LocationCheckResponseSerializer,
     CityValidationSerializer,
@@ -25,9 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class CityViewSet(viewsets.ModelViewSet):
-    queryset = City.objects.filter(is_allowed=True).prefetch_related(
-        Prefetch('cityprice', queryset=CityPrice.objects.only('economy', 'comfort', 'standard'))
-    )
+    queryset = City.objects.filter(is_allowed=True)
     permission_classes = [IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['is_allowed', 'subcategory']
@@ -37,8 +34,6 @@ class CityViewSet(viewsets.ModelViewSet):
     ordering = ['title']
 
     def get_serializer_class(self):
-        if self.action in ['create', 'update', 'partial_update']:
-            return CityCreateSerializer
         return CitySerializer
 
     def create(self, request, *args, **kwargs):
@@ -290,8 +285,6 @@ class CityViewSet(viewsets.ModelViewSet):
             return list(City.objects.filter(
                 Q(title__icontains=city_name) | Q(title__iexact=city_name),
                 is_allowed=True
-            ).prefetch_related(
-                Prefetch('cityprice', queryset=CityPrice.objects.only('economy', 'comfort', 'standard'))
             ))
 
         cities = await get_cities()

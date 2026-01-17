@@ -26,7 +26,6 @@ class BotClient(models.Model):
         verbose_name_plural = "Bot foydalanuvchilari"
         verbose_name = "Bot foydalanuvchisi"
 
-
 class Passenger(models.Model):
     telegram_id = models.BigIntegerField(unique=True)
     full_name = models.CharField(max_length=200)
@@ -44,12 +43,17 @@ class Passenger(models.Model):
         verbose_name_plural = "Yo'lovchilar"
         verbose_name = "Yo'lovchi"
 
+class Cashback(models.Model):
+    telegram_id = models.BigIntegerField(unique=True)
+    amount = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return str(self.amount)
 
 class TravelClass(models.TextChoices):
     ECONOMY = "economy", "Economy"
     STANDARD = "standard", "Standard"
     COMFORT = "comfort", "Comfort"
-
 
 class TravelStatus(models.TextChoices):
     CREATED = "created", "Created"
@@ -59,20 +63,16 @@ class TravelStatus(models.TextChoices):
     ENDED = "ended", "Ended"
     REJECTED = "rejected", "Rejected"
 
-
 class Coordinate(BaseModel):
     longitude: float  # Changed to float, coordinates are typically floats
     latitude: float
-
 
 class Location(BaseModel):
     city: str = ""
     location: Optional[Coordinate] = None
 
-
 def default_location():
-    return Location().dict()
-
+    return Location().model_dump()
 
 class Journey(models.Model):
     user = models.BigIntegerField()
@@ -86,7 +86,6 @@ class Journey(models.Model):
 
     class Meta:
         abstract = True
-
 
 class PassengerTravel(Journey):
     travel_class = models.CharField(max_length=200, choices=TravelClass.choices, default=TravelClass.STANDARD)
@@ -102,7 +101,6 @@ class PassengerTravel(Journey):
         verbose_name_plural = "Sayohatlar"
         verbose_name = "Sayohat"
 
-
 class PassengerPost(Journey):
     pass
 
@@ -114,11 +112,9 @@ class PassengerPost(Journey):
         verbose_name_plural = "Pochtalar"
         verbose_name = "Pochta"
 
-
 class DriverStatus(models.TextChoices):
     OFFLINE = "offline", "Offline"
     ONLINE = "online", "Online"
-
 
 class Driver(models.Model):
     telegram_id = models.BigIntegerField(unique=True, null=True, blank=True, verbose_name="Telegram ID")
@@ -144,7 +140,8 @@ class Driver(models.Model):
         null=True,  # Add this if default=None
         blank=True
     )
-    status = models.CharField(max_length=10, choices=DriverStatus.choices, default=DriverStatus.OFFLINE, verbose_name="Haydovchi xolati")
+    status = models.CharField(max_length=10, choices=DriverStatus.choices, default=DriverStatus.OFFLINE,
+                              verbose_name="Haydovchi xolati")
     amount = models.IntegerField(default=150000, verbose_name="Haudovchi mablag'i")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -157,11 +154,9 @@ class Driver(models.Model):
         verbose_name_plural = "Haydovchilar"
         verbose_name = "Haydovchi"
 
-
 class DriverGallery(models.Model):
     telegram_id = models.OneToOneField(Driver, on_delete=models.CASCADE)
     profile_image = models.ImageField(null=True, blank=True, upload_to="profile_image/")
-
 
 class Car(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE, related_name="driver")
@@ -179,8 +174,6 @@ class Car(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-
-
 class DriverTransaction(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
     amount = models.FloatField()
@@ -193,7 +186,6 @@ class DriverTransaction(models.Model):
         ordering = ['-created_at']
         verbose_name_plural = "Haydovchi pul o'tkazmalari"
         verbose_name = "Haydovchi pul o'tkazmasi"
-
 
 class City(models.Model):
     title = models.CharField(max_length=200)
@@ -213,26 +205,87 @@ class City(models.Model):
         verbose_name_plural = "Shaharlar"
         verbose_name = "Shahar"
 
+class Language(BaseModel):
+    uz: str = ""
+    en: str = ""
+    ru: str = ""
 
-class CityPrice(models.Model):
-    city = models.OneToOneField(City, on_delete=models.CASCADE)
-    economy = models.DecimalField(decimal_places=2, max_digits=10)
-    comfort = models.DecimalField(decimal_places=2, max_digits=10)
-    standard = models.DecimalField(decimal_places=2, max_digits=10)
-    delivery = models.DecimalField(decimal_places=2, max_digits=10, default=50000)
+def default_language():
+    return Language().model_dump()
+
+class Tariff(models.Model):
+    title = models.CharField(max_length=200, unique=True)
+    translate = models.JSONField(default=default_language)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
-        return self.city.title
+        return self.title
 
     class Meta:
-        verbose_name_plural = "Shahar narxlari"
-        verbose_name = "Shahar narxlari"
+        verbose_name_plural = "Tariflar"
+        verbose_name = "Tarif"
 
+class Route(models.Model):
+    from_city = models.ForeignKey(
+        City,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="from_city",
+        verbose_name="Boshlanish")
+
+    to_city = models.ForeignKey(
+        City,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="to_city",
+        verbose_name="Tugash"
+    )
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.from_city} -> {self.to_city}"
+
+    class Meta:
+        verbose_name_plural = "Yo'nalishlar"
+        verbose_name = "Yo'nalish"
+        constraints = [
+            # Shaharlar bir xil bo'lmasligi
+            models.CheckConstraint(
+                check=~models.Q(from_city=models.F('to_city')),
+                name='check_from_to_not_equal',
+                violation_error_message="Boshlanish va tugash shaharlari bir xil bo'lishi mumkin emas!"
+            ),
+            models.UniqueConstraint(
+                fields=['from_city', 'to_city'],
+                name='unique_from_to_cities',
+                violation_error_message="Bu yo'nalish mavjud",
+                condition=models.Q(from_city__isnull=False) & models.Q(to_city__isnull=False)
+            )
+        ]
+
+class CityPrice(models.Model):
+    route = models.ForeignKey(Route, on_delete=models.SET_NULL, null=True, blank=True, related_name="route")
+    tariff = models.ForeignKey(Tariff, on_delete=models.SET_NULL, null=True, blank=True, related_name="tariff")
+    price = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.route} {self.tariff} {self.price}"
+
+    class Meta:
+        verbose_name_plural = "Yo'nalish narxlari"
+        verbose_name = "Yo'nalish narxlari"
+        constraints = [
+            models.UniqueConstraint(
+                fields=['route', 'tariff'],
+                name='unique_route_tariff'
+            ),
+        ]
 
 class OrderType(models.TextChoices):
     TRAVEL = "travel", "Travel"
     DELIVERY = "delivery", "Delivery"
-
 
 class Order(models.Model):
     user = models.BigIntegerField()
@@ -261,7 +314,6 @@ class Order(models.Model):
             try:
                 old_order = Order.objects.get(pk=self.pk)
                 if old_order.driver and old_order.driver != self.driver:
-
                     logger.warning(
                         f"Order {self.pk} driver o'zgartirishga urinish: "
                         f"Eski driver: {old_order.driver.pk}, Yangi driver: {self.driver.pk}"
@@ -270,3 +322,35 @@ class Order(models.Model):
                     self.driver = old_order.driver
             except Order.DoesNotExist:
                 pass
+
+class PassengerToDriverReview(models.Model):
+    class DriverRateChoices(models.IntegerChoices):
+        ONE = 1
+        TWO = 2
+        THREE = 3
+        FOUR = 4
+        FIVE = 5
+    passenger = models.ForeignKey(Passenger, on_delete=models.SET_NULL, null=True, blank=True)
+    driver = models.ForeignKey(Driver, on_delete=models.SET_NULL, null=True, blank=True)
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True)
+    commit = models.TextField(default='')
+    rate = models.IntegerField(default=DriverRateChoices.FIVE, choices=DriverRateChoices.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.passenger}/{self.driver}/{self.rate}"
+
+    class Meta:
+        verbose_name = "Buyurtmaga yo'lovchi izohi"
+        verbose_name_plural = "Buyurtmaga yo'lovchi izohlari"
+
+class RouteCashback(models.Model):
+    route = models.ForeignKey(Route, on_delete=models.SET_NULL, null=True, blank=True, related_name="admin_settings")
+    order_cashback = models.FloatField(default=0.001, verbose_name='Safar uchun keshbek %')
+
+    def __str__(self):
+        return f"{self.order_cashback}"
+
+    class Meta:
+        verbose_name = "Yo'nalish keshbeki"
+        verbose_name_plural = "Yo'nalish keshbeklari"
