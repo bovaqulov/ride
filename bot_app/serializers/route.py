@@ -46,9 +46,13 @@ class RoutePriceOptimizedSerializer(serializers.ModelSerializer):
         return CityPriceOptimizedSerializer(valid_prices, many=True).data
 
     def get_cashback(self, obj):
-        city_prices = RouteCashback.objects.filter(route=obj).first()
-        if city_prices:
-            return city_prices.cashback
-        return 0
+        try:
+            city_prices = RouteCashback.objects.filter(route=obj).first()
+            if city_prices:
+                return city_prices.order_cashback
+            return 0
+        except Exception as e:
+            print(e)
+            return 0
 
 
