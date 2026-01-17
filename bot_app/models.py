@@ -69,19 +69,12 @@ class Location(BaseModel):
 def default_location():
     return Location().model_dump()
 
-class TravelClass(models.TextChoices):
-    ECONOMY = "economy", "Economy"
-    STANDARD = "standard", "Standard"
-    COMFORT = "comfort", "Comfort"
-
-
 class Journey(models.Model):
     user = models.BigIntegerField()
     from_location = models.JSONField(default=default_location)
     to_location = models.JSONField(default=default_location)
     route = models.ForeignKey("Route", on_delete=models.SET_NULL, null=True, blank=True)
     tariff = models.ForeignKey("Tariff", on_delete=models.SET_NULL, null=True, blank=True)
-    travel_class = models.CharField(choices=TravelClass.choices, max_length=50, default=TravelClass.ECONOMY)
     comment = models.TextField(default="")
     cashback = models.IntegerField(default=0)
     start_time = models.DateTimeField()
