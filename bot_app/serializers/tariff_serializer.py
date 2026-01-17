@@ -8,4 +8,4 @@ class TariffSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tariff
-        fields = ("tariff_id", "translate")
+        fields = ("tariff_id", "title", "translate")
