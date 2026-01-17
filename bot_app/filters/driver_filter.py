@@ -2,7 +2,7 @@
 from django.db.models.functions import Coalesce
 from django_filters import rest_framework as filters
 from django.db.models import Q, OuterRef, Exists, Subquery, Count
-from ..models import Driver, Car, DriverTransaction, DriverStatus, TravelClass, Order, TravelStatus
+from ..models import Driver, Car, DriverTransaction, DriverStatus, Order, TravelStatus
 
 
 class DriverFilter(filters.FilterSet):
@@ -87,12 +87,11 @@ class CarFilter(filters.FilterSet):
     car_number = filters.CharFilter(lookup_expr='icontains')
     car_model = filters.CharFilter(lookup_expr='icontains')
     car_color = filters.CharFilter(lookup_expr='icontains')
-    car_class = filters.ChoiceFilter(choices=TravelClass.choices)
     driver = filters.NumberFilter(field_name='driver__id')
 
     class Meta:
         model = Car
-        fields = ['car_number', 'car_model', 'car_class', 'car_color', 'driver']
+        fields = ['car_number', 'car_model', 'car_color', 'driver']
 
 
 class DriverTransactionFilter(filters.FilterSet):

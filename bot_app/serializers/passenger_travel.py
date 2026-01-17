@@ -1,8 +1,10 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from rest_framework import serializers
 
 from .bot_client import BotClientSerializer
-from ..models import PassengerTravel, Order, BotClient
+from .city import CitySerializer
+from ..models import PassengerTravel, Order, BotClient, CityPrice, City, Route, Tariff
 
 
 class PassengerTravelSerializer(serializers.ModelSerializer):
@@ -10,13 +12,14 @@ class PassengerTravelSerializer(serializers.ModelSerializer):
     to_city = serializers.SerializerMethodField()
     order_id = serializers.SerializerMethodField()
     creator = serializers.SerializerMethodField()
+    price = serializers.SerializerMethodField()
 
 
     class Meta:
         model = PassengerTravel
         fields = [
-            'id', 'user','commit', 'start_time', 'creator', 'order_id', 'rate', 'from_location', 'to_location',
-            'from_city', 'to_city', 'travel_class', 'passenger',
+            'id', 'user','comment', 'route_id', "tariff_id", 'start_time', 'creator', 'order_id', 'from_location', 'to_location',
+            'from_city', 'to_city', 'tariff_id', 'passenger',
             'price', 'has_woman', "created_at"
         ]
 
@@ -25,13 +28,13 @@ class PassengerTravelSerializer(serializers.ModelSerializer):
     def get_from_city(self, obj):
         """from_location dan city nomini olish"""
         if isinstance(obj.from_location, dict):
-            return obj.from_location.get('city')
+            return CitySerializer(City.objects.get(id=obj.from_location.get('city_id'))).data
         return None
 
     def get_to_city(self, obj):
         """to_location dan city nomini olish"""
         if isinstance(obj.to_location, dict):
-            return obj.to_location.get('city')
+            return CitySerializer(City.objects.get(id=obj.to_location.get('city_id'))).data
         return None
 
     def get_order_id(self, obj):
@@ -53,13 +56,33 @@ class PassengerTravelSerializer(serializers.ModelSerializer):
         except BotClient.DoesNotExist:
             return {}
 
+    def get_price(self, obj):
+        try:
+            """Get price after object is created"""
+            print(obj.route_id, obj.tariff_id)
+            price = CityPrice.objects.filter(Q(route=obj.route_id) & Q(tariff=obj.tariff_id)).first()
+            return price.price - obj.cashback
+        except Exception as e:
+            print(e)
+            return 0
+
 class PassengerTravelCreateSerializer(serializers.ModelSerializer):
+    route_id = serializers.PrimaryKeyRelatedField(
+        source='route',
+        queryset=Route.objects.all(),
+        write_only=True
+    )
+    tariff_id = serializers.PrimaryKeyRelatedField(
+        source='tariff',
+        queryset=Tariff.objects.all(),
+        write_only=True
+    )
 
     class Meta:
         model = PassengerTravel
         fields = [
-            'user','commit', 'start_time', 'from_location', 'to_location', 'travel_class',
-            'passenger', 'price', 'has_woman'
+            'user','comment', 'route_id', 'start_time', 'comment', 'from_location', 'to_location', 'tariff_id',
+            'passenger', 'cashback', 'has_woman'
         ]
 
     def validate_from_location(self, value):
@@ -76,5 +99,5 @@ class PassengerTravelUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PassengerTravel
         fields = [
-            'rate', 'travel_class', 'passenger', 'price', 'has_woman'
+            'rate', 'tariff_id', 'passenger', 'price', 'has_woman'
         ]

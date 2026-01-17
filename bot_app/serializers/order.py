@@ -7,7 +7,7 @@ import json
 from .bot_client import BotClientSerializer
 from .driver import DriverSerializer
 from .passenger import PassengerSerializer
-from ..models import Order, PassengerTravel, PassengerPost, TravelStatus, OrderType, Driver, BotClient, Passenger, City
+from ..models import Order, PassengerTravel, PassengerPost, OrderType, Driver, BotClient, Passenger
 
 
 class ContentObjectSerializer(serializers.Serializer):
@@ -20,25 +20,26 @@ class ContentObjectSerializer(serializers.Serializer):
                 'id': instance.pk,
                 'from_location': instance.from_location,
                 'to_location': instance.to_location,
-                'travel_class': instance.travel_class,
-                'rate': instance.rate,
+                'route_id': instance.route.id,
+                'tariff_id': instance.tariff.id,
                 'passenger': instance.passenger,
                 'has_woman': instance.has_woman,
-                'commit': instance.commit,
+                'cashback': instance.cashback,
+                'comment': instance.comment,
                 'start_time': instance.start_time,
-                'price': str(instance.price) if instance.price else None,  # Decimal to string
                 'created_at': instance.created_at.isoformat() if instance.created_at else None  # ISO format
             }
         elif isinstance(instance, PassengerPost):
             return {
                 'type': 'passengerpost',
                 'id': instance.pk,
-                'commit': instance.commit,
+                'route_id': instance.route.id,
+                'tariff_id': instance.tariff.id,
+                'comment': instance.comment,
+                'cashback': instance.cashback,
                 'start_time': instance.start_time,
                 'from_location': instance.from_location,
                 'to_location': instance.to_location,
-                'travel_class': "delivery",
-                'price': str(instance.price) if instance.price else None,  # Decimal to string
                 'created_at': instance.created_at.isoformat() if instance.created_at else None  # ISO format
             }
         return None

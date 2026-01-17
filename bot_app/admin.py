@@ -32,17 +32,16 @@ class PassengerTravelAdmin(admin.ModelAdmin):
         'creator_name',
         "get_start_time",
         'get_locations',
-        'price',
-        'commit',
+        'comment',
         'passenger',
         'has_woman',
-        "commit",
+        "comment",
 
     ]
 
-    list_filter = ['travel_class', 'has_woman', 'created_at']
+    list_filter = [ 'has_woman', 'created_at']
     search_fields = ['user', ]
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at',]
 
     # start_time uchun custom metod
     def get_start_time(self, obj):
@@ -91,7 +90,7 @@ class PassengerTravelAdmin(admin.ModelAdmin):
     # Admin change form uchun
     fieldsets = (
         ("Asosiy ma'lumotlar", {
-            'fields': ('user', 'price', 'start_time', 'commit')
+            'fields': ('user', 'start_time', 'comment')
         }),
         ("Lokatsiyalar", {
             'fields': ('from_location', 'to_location')
@@ -104,9 +103,8 @@ class PassengerTravelAdmin(admin.ModelAdmin):
 
 @admin.register(PassengerPost)
 class PassengerPostAdmin(admin.ModelAdmin):
-    list_display = ("id", "creator_name", "price", "commit", "get_start_time", "get_locations", "created_at")
-    search_fields = ("user", "commit")
-    list_editable = ("price",)
+    list_display = ("id", "creator_name", "comment", "get_start_time", "get_locations", "created_at")
+    search_fields = ("user", "comment")
     ordering = ("-created_at",)
     list_filter = ("start_time",)  # Agar start_time None bo'lsa, bu filterda muammo bo'lishi mumkin
 
@@ -157,7 +155,7 @@ class PassengerPostAdmin(admin.ModelAdmin):
     # Admin change form uchun
     fieldsets = (
         ("Asosiy ma'lumotlar", {
-            'fields': ('user', 'price', 'start_time', 'commit')
+            'fields': ('user', 'start_time', 'comment')
         }),
         ("Lokatsiyalar", {
             'fields': ('from_location', 'to_location')
@@ -219,12 +217,12 @@ class DriverAdmin(admin.ModelAdmin):
 
 @admin.register(CityPrice)
 class CityPriceInline(admin.ModelAdmin):
-    list_display = ("route", "price")
+    list_display = ('id', "route", "price")
 
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):
     # Ro'yxat ko'rinishi
-    list_display = ['title', 'get_subcategory', 'is_allowed', 'created_at']
+    list_display = ['id', 'title', 'get_subcategory', 'is_allowed', 'created_at']
     list_filter = ['is_allowed', 'created_at']
     search_fields = ['title']
 
@@ -385,12 +383,12 @@ class PassengerAdmin(admin.ModelAdmin):
 
 @admin.register(Tariff)
 class TariffInline(admin.ModelAdmin):
-    list_display = ('title', 'is_active')
+    list_display = ('id', 'title', 'is_active')
 
 
 @admin.register(Route)
 class RouteAdmin(admin.ModelAdmin):
-    list_display = ("from_city", "to_city", 'is_active')
+    list_display = ('id',"from_city", "to_city", 'is_active')
 
 
 @admin.register(RouteCashback)

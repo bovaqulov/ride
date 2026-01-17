@@ -3,17 +3,22 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
 from .bot_client import BotClientSerializer
-from ..models import PassengerPost, Order, BotClient
+from ..models import PassengerPost, Order, BotClient, Route
 
 
 class PassengerPostSerializer(serializers.ModelSerializer):
     order_id = serializers.SerializerMethodField()
     creator = serializers.SerializerMethodField()
+    route_id = serializers.PrimaryKeyRelatedField(
+        source='route',
+        queryset=Route.objects.all(),
+        write_only=True
+    )
 
     class Meta:
         model = PassengerPost
         fields = [
-            'id', 'creator', 'commit', 'start_time', 'order_id', 'from_location', 'to_location', 'price'
+            'id', 'creator', 'comment', 'start_time', 'order_id', 'from_location', 'to_location', "route_id",
         ]
         read_only_fields = ['id']
 
@@ -43,7 +48,7 @@ class PassengerPostCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PassengerPost
-        fields = ['user', 'creator','commit', 'start_time', 'from_location', 'to_location', 'price']
+        fields = ['user', 'creator','comment', 'start_time', 'from_location', 'to_location', "cashback", "route_id",]
 
     def get_creator(self, obj):
         """Get creator after object is created"""
@@ -65,7 +70,7 @@ class PassengerPostListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PassengerPost
-        fields = ['id', 'user', 'creator','commit', 'start_time', 'from_location', 'to_location', 'price']
+        fields = ['id', 'user', 'creator','comment', 'start_time', 'from_location', 'to_location', 'price']
 
     def get_creator(self, obj):
         """Get creator after object is created"""

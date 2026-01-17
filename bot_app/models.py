@@ -50,11 +50,6 @@ class Cashback(models.Model):
     def __str__(self):
         return str(self.amount)
 
-class TravelClass(models.TextChoices):
-    ECONOMY = "economy", "Economy"
-    STANDARD = "standard", "Standard"
-    COMFORT = "comfort", "Comfort"
-
 class TravelStatus(models.TextChoices):
     CREATED = "created", "Created"
     ASSIGNED = "assigned", "Assigned"
@@ -78,20 +73,19 @@ class Journey(models.Model):
     user = models.BigIntegerField()
     from_location = models.JSONField(default=default_location)
     to_location = models.JSONField(default=default_location)
-    price = models.IntegerField(default=0)
-    commit = models.TextField(default="")
+    route = models.ForeignKey("Route", on_delete=models.SET_NULL, null=True, blank=True)
+    tariff = models.ForeignKey("Tariff", on_delete=models.SET_NULL, null=True, blank=True)
+    comment = models.TextField(default="")
+    cashback = models.IntegerField(default=0)
     start_time = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True
 
 class PassengerTravel(Journey):
-    travel_class = models.CharField(max_length=200, choices=TravelClass.choices, default=TravelClass.STANDARD)
     passenger = models.IntegerField(default=1)
     has_woman = models.BooleanField(default=False)
-    rate = models.IntegerField(default=0)
 
     def __str__(self):
         return str(self.user)
@@ -102,6 +96,7 @@ class PassengerTravel(Journey):
         verbose_name = "Sayohat"
 
 class PassengerPost(Journey):
+
     pass
 
     def __str__(self):
@@ -120,6 +115,7 @@ class Driver(models.Model):
     telegram_id = models.BigIntegerField(unique=True, null=True, blank=True, verbose_name="Telegram ID")
     full_name = models.CharField(max_length=200, default='', verbose_name="Haydovchi ismi")
     total_rides = models.IntegerField(default=0)
+    route_id = models.ForeignKey("Route", on_delete=models.SET_NULL, null=True, blank=True)
     phone = models.CharField(max_length=50, unique=True, null=True, blank=True)
     rating = models.IntegerField(default=5)
     from_location = models.ForeignKey(
@@ -158,12 +154,19 @@ class DriverGallery(models.Model):
     telegram_id = models.OneToOneField(Driver, on_delete=models.CASCADE)
     profile_image = models.ImageField(null=True, blank=True, upload_to="profile_image/")
 
+
+class TravelClass(models.TextChoices):
+    ECONOMY = "economy", "Economy"
+    STANDARD = "standard", "Standard"
+    COMFORT = "comfort", "Comfort"
+
 class Car(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE, related_name="driver")
     car_number = models.CharField(max_length=200, unique=True)
     car_model = models.CharField(max_length=200)
     car_color = models.CharField(max_length=200)
-    car_class = models.CharField(max_length=200, choices=TravelClass.choices, default=TravelClass.ECONOMY)
+    car_class = models.CharField(max_length=200, choices=TravelClass.choices, default=TravelClass.STANDARD)
+    tariff = models.ForeignKey("Tariff", on_delete=models.SET_NULL, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -333,7 +336,7 @@ class PassengerToDriverReview(models.Model):
     passenger = models.ForeignKey(Passenger, on_delete=models.SET_NULL, null=True, blank=True)
     driver = models.ForeignKey(Driver, on_delete=models.SET_NULL, null=True, blank=True)
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True)
-    commit = models.TextField(default='')
+    comment = models.TextField(default='')
     rate = models.IntegerField(default=DriverRateChoices.FIVE, choices=DriverRateChoices.choices)
     created_at = models.DateTimeField(auto_now_add=True)
 

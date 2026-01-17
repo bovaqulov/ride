@@ -33,6 +33,5 @@ class PassengerTravelFilter(django_filters.FilterSet):
         model = PassengerTravel
         fields = {
             'user': ['exact'],
-            'travel_class': ['exact'],
             'has_woman': ['exact'],
         }
