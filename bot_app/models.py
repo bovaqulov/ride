@@ -165,7 +165,6 @@ class Car(models.Model):
     car_number = models.CharField(max_length=200, unique=True)
     car_model = models.CharField(max_length=200)
     car_color = models.CharField(max_length=200)
-    car_class = models.CharField(max_length=200, choices=TravelClass.choices, default=TravelClass.ECONOMY)
     tariff = models.ForeignKey("Tariff", on_delete=models.SET_NULL, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -357,3 +356,4 @@ class RouteCashback(models.Model):
     class Meta:
         verbose_name = "Yo'nalish keshbeki"
         verbose_name_plural = "Yo'nalish keshbeklari"
+
