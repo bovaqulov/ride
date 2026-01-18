@@ -96,7 +96,7 @@ class PassengerTravelAdmin(admin.ModelAdmin):
             'fields': ('from_location', 'to_location')
         }),
         ("Vaqt belgilari", {
-            'fields': ('created_at', 'updated_at')
+            'fields': ('created_at',)
         }),
     )
 
@@ -161,7 +161,7 @@ class PassengerPostAdmin(admin.ModelAdmin):
             'fields': ('from_location', 'to_location')
         }),
         ("Vaqt belgilari", {
-            'fields': ('created_at', 'updated_at')
+            'fields': ('created_at',)
         }),
     )
 
