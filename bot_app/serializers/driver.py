@@ -25,7 +25,6 @@ class DriverCarSerializer(serializers.ModelSerializer):
             'car_number',
             'car_model',
             'car_color',
-            'car_class'
         ]
         read_only_fields = ('created_at', 'updated_at')
 
@@ -192,7 +191,6 @@ class DriverListSerializer(serializers.ModelSerializer):
         latest_car = obj.driver.order_by('-created_at').first()
         if latest_car:
             return {
-                'car_class': latest_car.car_class,
                 'car_number': latest_car.car_number,
                 'car_model': latest_car.car_model
             }
@@ -274,7 +272,6 @@ class DriverCarSerializer(serializers.ModelSerializer):
             'car_number',
             'car_model',
             'car_color',
-            'car_class'  # ✅ Bu field qo'shildi
         ]
         read_only_fields = ('created_at', 'updated_at')
 
@@ -285,7 +282,7 @@ class DriverCreateSerializer(serializers.ModelSerializer):
         child=serializers.DictField(),
         write_only=True,
         required=False,
-        help_text="List of cars: [{'car_number': '...', 'car_model': '...', 'car_color': '...', 'car_class': '...'}]"
+        help_text="List of cars: [{'car_number': '...', 'car_model': '...', 'car_color': '...',}]"
     )
 
     class Meta:
@@ -305,19 +302,12 @@ class DriverCreateSerializer(serializers.ModelSerializer):
     def validate_cars(self, value):
         """Cars list ni validatsiya qilish"""
         for car in value:
-            required_fields = ['car_number', 'car_model', 'car_color', 'car_class']
+            required_fields = ['car_number', 'car_model', 'car_color']
             for field in required_fields:
                 if field not in car:
                     raise serializers.ValidationError(
                         f"{field} field is required for each car"
                     )
-
-            # car_class validatsiyasi
-            valid_car_classes = ['economy', 'comfort', 'standard']  # TravelClass.choices dan
-            if car['car_class'].lower() not in valid_car_classes:
-                raise serializers.ValidationError(
-                    f"car_class must be one of: {', '.join(valid_car_classes)}"
-                )
 
         return value
 
@@ -337,7 +327,6 @@ class DriverCreateSerializer(serializers.ModelSerializer):
                     car_number=car_data['car_number'],
                     car_model=car_data['car_model'],
                     car_color=car_data['car_color'],
-                    car_class=car_data['car_class'].lower()  # ✅ Kichik harfga o'tkazish
                 )
 
         # Agar rasm berilgan bo'lsa, DriverGallery ni yaratish
