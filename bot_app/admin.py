@@ -100,7 +100,6 @@ class PassengerTravelAdmin(admin.ModelAdmin):
         }),
     )
 
-
 @admin.register(PassengerPost)
 class PassengerPostAdmin(admin.ModelAdmin):
     list_display = ("id", "creator_name", "comment", "get_start_time", "get_locations", "created_at")
@@ -108,11 +107,12 @@ class PassengerPostAdmin(admin.ModelAdmin):
     ordering = ("-created_at",)
     list_filter = ("start_time",)  # Agar start_time None bo'lsa, bu filterda muammo bo'lishi mumkin
 
+    readonly_fields = ('created_at',)  # <-- bu yerga qo'shildi
+
     # start_time uchun custom metod
     def get_start_time(self, obj):
         if obj.start_time:
             try:
-                # timezone aware bo'lsa
                 from django.utils import timezone
                 if timezone.is_aware(obj.start_time):
                     return timezone.localtime(obj.start_time).strftime("%Y-%m-%d %H:%M")
@@ -135,17 +135,14 @@ class PassengerPostAdmin(admin.ModelAdmin):
 
     def get_locations(self, obj):
         try:
-            # JSON fielddan ma'lumot olish
             from_location = obj.from_location
             to_location = obj.to_location
 
-            # Agar dict bo'lsa
             if isinstance(from_location, dict) and isinstance(to_location, dict):
                 from_city = from_location.get('city', '')
                 to_city = to_location.get('city', '')
                 return f"{from_city} → {to_city}"
 
-            # Agar string bo'lsa
             return f"{from_location} → {to_location}"
         except Exception as e:
             return f"Xato: {str(e)}"
@@ -161,9 +158,10 @@ class PassengerPostAdmin(admin.ModelAdmin):
             'fields': ('from_location', 'to_location')
         }),
         ("Vaqt belgilari", {
-            'fields': ('created_at',)
+            'fields': ('created_at',)  # endi readonly_fields bilan muammo bo'lmaydi
         }),
     )
+
 
 class CarInline(admin.TabularInline):
     model = Car
