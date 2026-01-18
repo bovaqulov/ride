@@ -115,7 +115,7 @@ class Driver(models.Model):
     telegram_id = models.BigIntegerField(unique=True, null=True, blank=True, verbose_name="Telegram ID")
     full_name = models.CharField(max_length=200, default='', verbose_name="Haydovchi ismi")
     total_rides = models.IntegerField(default=0)
-    route = models.ForeignKey("Route", on_delete=models.SET_NULL, null=True, blank=True)
+    route_id = models.ForeignKey("Route", on_delete=models.SET_NULL, null=True, blank=True)
     phone = models.CharField(max_length=50, unique=True, null=True, blank=True)
     rating = models.IntegerField(default=5)
     from_location = models.ForeignKey(
