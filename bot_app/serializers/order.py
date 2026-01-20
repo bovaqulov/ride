@@ -10,43 +10,52 @@ from .passenger import PassengerSerializer
 from ..models import Order, PassengerTravel, PassengerPost, OrderType, Driver, BotClient, Passenger
 
 
+from rest_framework import serializers
+from django.core.serializers.json import DjangoJSONEncoder
+import json
+
+from ..models import PassengerTravel, PassengerPost
+
 class ContentObjectSerializer(serializers.Serializer):
     """Generic content object serializer"""
 
     def to_representation(self, instance):
-        route_id = instance.route.id if instance.route else None
-        tariff_id = instance.tariff.id if instance.tariff else None
+        route_id = instance.route.id if getattr(instance, "route", None) else None
+        tariff_id = instance.tariff.id if getattr(instance, "tariff", None) else None
+
         data = {
-            'id': instance.pk,
-            'route_id': route_id,
-            'tariff_id': tariff_id,
-            'from_location': instance.from_location,
-            'to_location': instance.to_location,
-            'cashback': instance.cashback,
-            'comment': instance.comment,
-            'start_time': instance.start_time,
-            'created_at': instance.created_at.isoformat() if instance.created_at else None  # ISO format
+            "id": instance.pk,
+            "route_id": route_id,
+            "tariff_id": tariff_id,
+            "from_location": instance.from_location,
+            "to_location": instance.to_location,
+            "cashback": instance.cashback,
+            "comment": instance.comment,
+            "start_time": instance.start_time,
+            "created_at": instance.created_at.isoformat() if instance.created_at else None,
         }
 
-
         if isinstance(instance, PassengerTravel):
-            return {
-                'type': 'passengertravel',
-                'passenger': instance.passenger,
-                'has_woman': instance.has_woman,
-            }.update(data)
-        elif isinstance(instance, PassengerPost):
-            return {
-                'type': 'passengerpost',
-            }.update(data)
+            extra = {
+                "type": "passengertravel",
+                "passenger": instance.passenger,
+                "has_woman": instance.has_woman,
+            }
+            return {**data, **extra}
+
+        if isinstance(instance, PassengerPost):
+            extra = {
+                "type": "passengerpost",
+            }
+            return {**data, **extra}
+
         return None
 
+    def get_serialized_data(self, instance):
+        """JSON serializatsiya uchun maxsus metod"""
+        data = self.to_representation(instance)
+        return json.loads(json.dumps(data, cls=DjangoJSONEncoder))
 
-def get_serialized_data(self, instance):
-    """JSON serializatsiya uchun maxsus metod"""
-    data = self.to_representation(instance)
-    # DjangoJSONEncoder bilan serializatsiya
-    return json.loads(json.dumps(data, cls=DjangoJSONEncoder))
 
 
 class OrderSerializer(serializers.ModelSerializer):
