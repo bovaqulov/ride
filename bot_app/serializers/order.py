@@ -39,7 +39,7 @@ class ContentObjectSerializer(serializers.Serializer):
             "id": instance.pk,
             "price": price,
             "route_id": route_id,
-            "tariff_id": tariff,
+            "tariff": tariff,
             "from_location": instance.from_location,
             "to_location": instance.to_location,
             "cashback": instance.cashback,
