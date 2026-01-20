@@ -24,7 +24,7 @@ class ContentObjectSerializer(serializers.Serializer):
         route_id = instance.route.id if getattr(instance, "route", None) else None
         tariff_id = instance.tariff.id if getattr(instance, "tariff", None) else None
 
-        price = CityPrice.objects.filter(Q(tarif=tariff_id) | Q(route=route_id)).first()
+        price = CityPrice.objects.filter(Q(tariff=tariff_id) | Q(route=route_id)).first()
         if price:
             price = price.price
         else:
