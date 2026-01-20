@@ -44,6 +44,10 @@ class Passenger(models.Model):
         verbose_name = "Yo'lovchi"
 
 class Cashback(models.Model):
+    """
+    :param telegram_id:
+    :arg amount:
+    """
     telegram_id = models.BigIntegerField(unique=True)
     amount = models.PositiveIntegerField(default=0)
 
