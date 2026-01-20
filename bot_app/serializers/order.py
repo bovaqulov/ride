@@ -1,4 +1,5 @@
 # serializers.py
+from django.db.models import Q
 from rest_framework import serializers
 from django.contrib.contenttypes.models import ContentType
 from django.core.serializers.json import DjangoJSONEncoder
@@ -7,8 +8,7 @@ import json
 from .bot_client import BotClientSerializer
 from .driver import DriverSerializer
 from .passenger import PassengerSerializer
-from ..models import Order, PassengerTravel, PassengerPost, OrderType, Driver, BotClient, Passenger
-
+from ..models import Order, PassengerTravel, PassengerPost, OrderType, Driver, BotClient, Passenger, CityPrice
 
 from rest_framework import serializers
 from django.core.serializers.json import DjangoJSONEncoder
@@ -22,9 +22,15 @@ class ContentObjectSerializer(serializers.Serializer):
     def to_representation(self, instance):
         route_id = instance.route.id if getattr(instance, "route", None) else None
         tariff_id = instance.tariff.id if getattr(instance, "tariff", None) else None
+        price = CityPrice.objects.filter(Q(tarif=tariff_id) | Q(route=route_id)).first()
+        if price:
+            price = price.price
+        else:
+            price = None
 
         data = {
             "id": instance.pk,
+            "price": price,
             "route_id": route_id,
             "tariff_id": tariff_id,
             "from_location": instance.from_location,
