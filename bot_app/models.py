@@ -81,7 +81,7 @@ class Journey(models.Model):
     to_location = models.JSONField(default=default_location)
     route = models.ForeignKey("Route", on_delete=models.SET_NULL, null=True, blank=True)
     tariff = models.ForeignKey("Tariff", on_delete=models.SET_NULL, null=True, blank=True)
-    comment = models.TextField(default="")
+    comment = models.TextField(null=True, blank=True)
     cashback = models.IntegerField(default=0)
     start_time = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
