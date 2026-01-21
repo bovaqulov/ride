@@ -48,7 +48,7 @@ class PassengerPostCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PassengerPost
-        fields = ['user', 'creator','comment', 'start_time', 'from_location', 'to_location', "cashback", "route_id",]
+        fields = ['user', 'creator', 'comment', 'start_time', 'from_location', 'to_location', "cashback", "route_id"]
 
     def get_creator(self, obj):
         """Get creator after object is created"""
@@ -62,7 +62,7 @@ class PassengerPostCreateSerializer(serializers.ModelSerializer):
 class PassengerPostUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PassengerPost
-        fields = ['from_location', 'to_location', 'price', ]
+        fields = ['from_location', 'to_location', ]
 
 
 class PassengerPostListSerializer(serializers.ModelSerializer):
@@ -70,7 +70,7 @@ class PassengerPostListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PassengerPost
-        fields = ['id', 'user', 'creator','comment', 'start_time', 'from_location', 'to_location', 'price']
+        fields = ['id', 'user', 'creator','comment', 'start_time', 'from_location', 'to_location',]
 
     def get_creator(self, obj):
         """Get creator after object is created"""

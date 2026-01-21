@@ -4,14 +4,11 @@ from ..models import City
 
 
 class CitySerializer(serializers.ModelSerializer):
-    subcategory_title = serializers.CharField(source='subcategory.title', read_only=True)
-    subcategory_id = serializers.IntegerField(source='subcategory.id', read_only=True)
 
     class Meta:
         model = City
         fields = [
-            'id', 'title', 'translate', 'subcategory', 'latitude', 'longitude', 'subcategory_title',
-            'subcategory_id',
+            'id', 'title', 'translate', 'latitude', 'longitude',
             'is_allowed', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']

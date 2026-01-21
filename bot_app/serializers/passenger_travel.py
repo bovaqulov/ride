@@ -99,5 +99,5 @@ class PassengerTravelUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PassengerTravel
         fields = [
-            'rate', 'tariff_id', 'passenger', 'price', 'has_woman'
+         'tariff_id', 'passenger', 'has_woman'
         ]

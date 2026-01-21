@@ -56,10 +56,12 @@ class Cashback(models.Model):
 
 class TravelStatus(models.TextChoices):
     CREATED = "created", "Created"
+    SEARCHED = "searched", "Searched"
     ASSIGNED = "assigned", "Assigned"
     ARRIVED = "arrived", "Arrived"
     STARTED = "started", "Started"
     ENDED = "ended", "Ended"
+    CANCELED = "canceled", "Canceled"
     REJECTED = "rejected", "Rejected"
 
 class Coordinate(BaseModel):
@@ -157,12 +159,6 @@ class Driver(models.Model):
 class DriverGallery(models.Model):
     telegram_id = models.OneToOneField(Driver, on_delete=models.CASCADE)
     profile_image = models.ImageField(null=True, blank=True, upload_to="profile_image/")
-
-
-class TravelClass(models.TextChoices):
-    ECONOMY = "economy", "Economy"
-    STANDARD = "standard", "Standard"
-    COMFORT = "comfort", "Comfort"
 
 class Car(models.Model):
     driver = models.ForeignKey(Driver, on_delete=models.CASCADE, related_name="driver")
@@ -336,19 +332,22 @@ class PassengerToDriverReview(models.Model):
         THREE = 3
         FOUR = 4
         FIVE = 5
+
     passenger = models.ForeignKey(Passenger, on_delete=models.SET_NULL, null=True, blank=True)
-    driver = models.ForeignKey(Driver, on_delete=models.SET_NULL, null=True, blank=True)
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True)
     comment = models.TextField(default='')
     rate = models.IntegerField(default=DriverRateChoices.FIVE, choices=DriverRateChoices.choices)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.passenger}/{self.driver}/{self.rate}"
-
     class Meta:
         verbose_name = "Buyurtmaga yo'lovchi izohi"
         verbose_name_plural = "Buyurtmaga yo'lovchi izohlari"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["order", "passenger"],
+                name="uniq_review_per_order_per_passenger"
+            )
+        ]
 
 class RouteCashback(models.Model):
     route = models.ForeignKey(Route, on_delete=models.SET_NULL, null=True, blank=True, related_name="admin_settings")
@@ -360,4 +359,19 @@ class RouteCashback(models.Model):
     class Meta:
         verbose_name = "Yo'nalish keshbeki"
         verbose_name_plural = "Yo'nalish keshbeklari"
+
+class Reject(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True)
+    comment = models.TextField(default='')
+
+    class Meta:
+        abstract = True
+
+class PassengerReject(Reject):
+    passenger = models.ForeignKey(Passenger, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+    def __str__(self):
+        return f"{self.passenger}"
 

@@ -1,12 +1,14 @@
 # views.py
+from django.db import transaction
 from rest_framework import viewsets, filters, status
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from ..models import Order
+from ..models import Order, PassengerReject
 from ..serializers.order import (
-    OrderSerializer, OrderCreateSerializer, OrderUpdateSerializer, OrderListSerializer,
+    OrderSerializer, OrderCreateSerializer, OrderUpdateSerializer, OrderListSerializer, PassengerRejectCreateSerializer,
+    PassengerToDriverReviewCreateSerializer,
 )
 from ..filters.order_filters import OrderFilter
 
@@ -68,3 +70,32 @@ class OrderViewSet(viewsets.ModelViewSet):
                 {'error': 'Foydalanuvchi topilmadi'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+    @action(detail=False, methods=['post'], url_path="reject")
+    def reject(self, request):
+        serializer = PassengerRejectCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            reject_obj = serializer.save()  # PassengerReject yaratildi
+
+            # FK orqali order instance’ni olish
+            order = reject_obj.order
+            if order is not None:
+                order.status = "rejected"
+                order.save(update_fields=["status"])
+
+        return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['post'], url_path="review")
+    def review(self, request):
+        serializer = PassengerToDriverReviewCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        with transaction.atomic():
+            review_obj = serializer.save()
+
+        return Response(
+            {"message": "success", "id": review_obj.id},
+            status=status.HTTP_201_CREATED
+        )

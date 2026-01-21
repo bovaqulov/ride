@@ -1,0 +1,443 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+:root {
+    --primary: #2563eb;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --light: #f8fafc;
+    --border: #e2e8f0;
+    --text: #334155;
+    --text-light: #64748b;
+}
+
+.message-container {
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 0 16px;
+}
+
+.header-section {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.header-section h1 {
+    color: var(--primary);
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.header-section p {
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.stat-box {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.stat-box:hover {
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 4px 0;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--border);
+    margin-bottom: 24px;
+}
+
+.form-row {
+    margin-bottom: 20px;
+}
+
+.form-row label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--text);
+    font-size: 14px;
+}
+
+.form-row select,
+.form-row textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border 0.2s;
+}
+
+.form-row select:focus,
+.form-row textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+#id_message {
+    min-height: 120px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.help-text {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-light);
+    line-height: 1.4;
+}
+
+.char-count {
+    text-align: right;
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 4px;
+}
+
+.button-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+}
+
+.btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-preview {
+    background: var(--light);
+    color: var(--primary);
+    border: 1px solid var(--border);
+}
+
+.btn-preview:hover {
+    background: #f1f5f9;
+}
+
+.btn-submit {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-submit:hover:not(:disabled) {
+    background: #1d4ed8;
+}
+
+.btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.preview-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid var(--border);
+    margin-top: 16px;
+    display: none;
+}
+
+.preview-card.show {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.preview-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 12px;
+}
+
+.preview-content {
+    background: var(--light);
+    border-radius: 6px;
+    padding: 16px;
+    border-left: 3px solid var(--primary);
+    min-height: 60px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 16px 0;
+    font-size: 14px;
+    border-left: 4px solid;
+    animation: slideIn 0.3s;
+}
+
+@keyframes slideIn {
+    from { transform: translateY(-10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.alert-success {
+    background: #d1fae5;
+    border-color: var(--success);
+    color: #065f46;
+}
+
+.alert-error {
+    background: #fee2e2;
+    border-color: var(--danger);
+    color: #991b1b;
+}
+
+@media (max-width: 640px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .button-row {
+        flex-direction: column;
+    }
+
+    .form-card {
+        padding: 16px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="message-container">
+    <div class="header-section">
+        <h1>📨 Telegram Xabar Yuborish</h1>
+        <p>Foydalanuvchilarga telegram orqali xabar yuborish</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value">{{ total_users }}</div>
+            <div class="stat-label">Jami Foydalanuvchilar</div>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-icon">🚗</div>
+            <div class="stat-value">{{ total_drivers }}</div>
+            <div class="stat-label">Haydovchilar</div>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-icon">🚶</div>
+            <div class="stat-value">{{ total_passengers }}</div>
+            <div class="stat-label">Yo'lovchilar</div>
+        </div>
+    </div>
+
+    <div class="form-card">
+        <form method="post" id="messageForm">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <label for="id_message_type">Xabar turi</label>
+                {{ form.message_type }}
+                <div class="help-text">Kimlarga xabar yuborishni tanlang</div>
+            </div>
+
+            <div class="form-row" id="customIdsGroup" style="display: none;">
+                <label for="id_custom_ids">Telegram ID lar</label>
+                {{ form.custom_ids }}
+                <div class="help-text">Vergul bilan ajratilgan ID lar: 123, 456, 789</div>
+            </div>
+
+            <div class="form-row">
+                <label for="id_message">Xabar matni</label>
+                {{ form.message }}
+                <div class="char-count">
+                    Belgilar: <span id="charCount">0</span>
+                </div>
+                <div class="help-text">
+                    HTML formatlash: &lt;b&gt;qalin&lt;/b&gt;, &lt;i&gt;kursiv&lt;/i&gt;, &lt;a href="..."&gt;havola&lt;/a&gt;
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label for="id_parse_mode">Formatlash</label>
+                {{ form.parse_mode }}
+            </div>
+
+            <div class="button-row">
+                <button type="button" class="btn btn-preview" onclick="previewMessage()">
+                    👁️ Oldindan ko'rish
+                </button>
+                <button type="submit" class="btn btn-submit">
+                    📤 Xabarni yuborish
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div id="previewBox" class="preview-card">
+        <div class="preview-title">
+            <span>📱</span> Xabar ko'rinishi
+        </div>
+        <div id="previewContent" class="preview-content">
+            Xabar matni shu yerda ko'rinadi...
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const messageType = document.getElementById('id_message_type');
+    const messageText = document.getElementById('id_message');
+    const customIds = document.getElementById('customIdsGroup');
+    const charCount = document.getElementById('charCount');
+    const form = document.getElementById('messageForm');
+    const submitBtn = form.querySelector('.btn-submit');
+
+    // Belgilar soni
+    function updateCharCount() {
+        charCount.textContent = messageText.value.length;
+        if (messageText.value.length > 4000) {
+            charCount.style.color = 'var(--danger)';
+        } else if (messageText.value.length > 3000) {
+            charCount.style.color = 'var(--warning)';
+        } else {
+            charCount.style.color = 'var(--success)';
+        }
+    }
+
+    // Xabar turini o'zgartirish
+    messageType.addEventListener('change', function() {
+        customIds.style.display = this.value === 'custom' ? 'block' : 'none';
+    });
+
+    // Belgilar sonini kuzatish
+    messageText.addEventListener('input', updateCharCount);
+    updateCharCount();
+
+    // URL parametrlarini o'qish
+    const urlParams = new URLSearchParams(window.location.search);
+    const ids = urlParams.get('ids');
+    const type = urlParams.get('message_type');
+
+    if (ids) {
+        messageType.value = type || 'custom';
+        document.getElementById('id_custom_ids').value = ids;
+        customIds.style.display = 'block';
+    }
+
+    // Formani yuborish
+    form.addEventListener('submit', function(e) {
+        if (!messageText.value.trim()) {
+            e.preventDefault();
+            alert('Iltimos, xabar matnini kiriting!');
+            messageText.focus();
+            return;
+        }
+
+        if (!confirm('Xabarni yuborishni tasdiqlaysizmi?')) {
+            e.preventDefault();
+            return;
+        }
+
+        // Loading holati
+        submitBtn.disabled = true;
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '⏳ Yuborilmoqda...';
+
+        // 30 soniya limit
+        setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            alert('Xabar yuborish vaqti oshdi. Iltimos, qayta urinib ko\'ring.');
+        }, 30000);
+    });
+});
+
+function previewMessage() {
+    const message = document.getElementById('id_message').value;
+    const parseMode = document.getElementById('id_parse_mode').value;
+    const previewBox = document.getElementById('previewBox');
+    const previewContent = document.getElementById('previewContent');
+
+    if (!message.trim()) {
+        previewContent.innerHTML = '<em style="color: var(--text-light);">Xabar matni kiriting...</em>';
+    } else if (parseMode === 'HTML') {
+        previewContent.innerHTML = message;
+    } else {
+        previewContent.textContent = message;
+    }
+
+    previewBox.classList.add('show');
+    previewBox.scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+{% endblock %}

@@ -7,7 +7,6 @@ from .views.bot_client_views import BotClientViewSet
 from .views.cashback_views import CashbackViewSet
 from .views.city_views import CityViewSet
 from .views.driver_views import DriverViewSet, DriverTransactionViewSet
-from .views.order_passenger_review_views import PassengerToDriverReviewViewSet
 from .views.order_views import OrderViewSet
 from .views.passenger_post_views import PassengerPostViewSet
 from .views.passenger_travel_views import PassengerTravelViewSet
@@ -19,7 +18,6 @@ from .views.tariff_views import TariffViewSet
 router = DefaultRouter()
 router.register(r'clients', BotClientViewSet, basename='client')
 router.register(r'cashback',CashbackViewSet , basename='cashback')
-router.register(r'passenger-to-driver-review', PassengerToDriverReviewViewSet)
 router.register(r'tariffs', TariffViewSet, basename='tariff')
 router.register(r'travels', PassengerTravelViewSet, basename='passengertravel')
 router.register(r'posts', PassengerPostViewSet, basename='passengerpost')

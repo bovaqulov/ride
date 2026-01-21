@@ -1,38 +1,35 @@
-# TODO IMPORTS
+# config/settings.py
+
+# imports
+# global import
 import logging
 from pathlib import Path
-import dotenv
-import os
 
+# local import
 from configuration import env
 
-# TODO INITIALIZATION
-
-dotenv.load_dotenv()
+# init logger
 logger = logging.Logger(__name__)
 
-# TODO ALLOW HOSTS
-
+# Allow host
 ALLOWED_HOSTS = env.ALLOWED_HOSTS
 
-# TODO BASE_DIR
-
+# Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# TODO SECRET_KEY
-
+# secret key
 SECRET_KEY = env.SECRET_KEY
 
-# TODO DEBUG
-
+# debug
 DEBUG = env.DEBUG
 
-# TODO APPLICATION DEFINITION
-
+# local apps
 LOCAL_APPS = [
-    'bot_app'
+    'bot_app',
+    'analytics',
 ]
 
+# third party apps
 THIRD_PARTY_APPS = [
     "django_lifecycle_checks",
     "corsheaders",
@@ -42,6 +39,7 @@ THIRD_PARTY_APPS = [
     'drf_yasg',
 ]
 
+# django default apps
 DJANGO_APPS = [
     'jazzmin',
     'django.contrib.admin',
@@ -52,14 +50,37 @@ DJANGO_APPS = [
     'django.contrib.staticfiles',
 ]
 
+# install apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
-# TODO MIDDLEWARE
-
+# Cors settings
 CORS_HEADERS = [
     "corsheaders.middleware.CorsMiddleware",
 ]
+CSRF_TRUSTED_ORIGINS = [
+    "https://ride-production-62e7.up.railway.app",
+    "https://0c4ce2d8ee4f.ngrok-free.app",
+    "https://uneradicative-lamont-undistractingly.ngrok-free.dev"
+]
 
+CORS_ALLOW_ALL_ORIGINS = True
+
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
+CELERY_BROKER_URL = env.CELERY_BROKER_URL
+CELERY_RESULT_BACKEND = env.CELERY_RESULT_BACKEND
+
+# middleware
 MIDDLEWARE = CORS_HEADERS + [
     'django.middleware.security.SecurityMiddleware',
     "whitenoise.middleware.WhiteNoiseMiddleware",
@@ -76,7 +97,9 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            BASE_DIR / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -95,7 +118,6 @@ DATABASES = env.DATABASES
 # REST Framework settings
 REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
-    # To'g'ri schema class
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.openapi.AutoSchema',
 
     # Renderer va Parser sozlamalari
@@ -125,7 +147,7 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
 
-    # Pagination
+    # Pagination kerakmi menga shu uzi
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
 
@@ -172,31 +194,10 @@ REDOC_SETTINGS = {
     'LAZY_RENDERING': False,
 }
 
+# very important
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://ride-production-62e7.up.railway.app",
-    "https://0c4ce2d8ee4f.ngrok-free.app",
-    "https://uneradicative-lamont-undistractingly.ngrok-free.dev"
-]
-
-CORS_ALLOW_ALL_ORIGINS = True
-
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding",
-    "authorization",
-    "content-type",
-    "dnt",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
-]
-
-CELERY_BROKER_URL = env.CELERY_BROKER_URL
-CELERY_RESULT_BACKEND = env.CELERY_RESULT_BACKEND
-
+# swagger settings
 SWAGGER_SETTINGS = {
     'DEFAULT_MODEL_RENDERING': 'example',
     'USE_SESSION_AUTH': False,
@@ -214,10 +215,11 @@ SWAGGER_SETTINGS = {
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 
+# media
 MEDIA_ROOT = BASE_DIR / 'media'
 MEDIA_URL = '/media/'
 
-# settings.py
+# logging settings
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

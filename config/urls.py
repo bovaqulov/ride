@@ -5,6 +5,7 @@ from django.urls import path, include
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from analytics.admin import custom_admin_site
 
 
 schema_view = get_schema_view(
@@ -21,6 +22,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    path('dashboard/', custom_admin_site.urls),
     path('admin/', admin.site.urls),
     path('api/v1/', include('bot_app.urls')),
 

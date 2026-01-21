@@ -1,21 +1,17 @@
 # serializers.py
 from django.db.models import Q
+import json
 from rest_framework import serializers
 from django.contrib.contenttypes.models import ContentType
 from django.core.serializers.json import DjangoJSONEncoder
-import json
 
-from .bot_client import BotClientSerializer
 from .driver import DriverSerializer
 from .passenger import PassengerSerializer
+from .bot_client import BotClientSerializer
 from .tariff_serializer import TariffSerializer
-from ..models import Order, PassengerTravel, PassengerPost, OrderType, Driver, BotClient, Passenger, CityPrice, Tariff
+from ..models import Order, OrderType, Driver, BotClient, Passenger, CityPrice, Tariff, PassengerTravel, PassengerPost, \
+    PassengerReject, PassengerToDriverReview
 
-from rest_framework import serializers
-from django.core.serializers.json import DjangoJSONEncoder
-import json
-
-from ..models import PassengerTravel, PassengerPost
 
 class ContentObjectSerializer(serializers.Serializer):
     """Generic content object serializer"""
@@ -200,3 +196,63 @@ class OrderListSerializer(serializers.ModelSerializer):
         except Exception as e:
             print(e)
             return {}
+
+
+class PassengerRejectCreateSerializer(serializers.ModelSerializer):
+    order_id = serializers.PrimaryKeyRelatedField(
+        queryset=Order.objects.all(),
+        source="order",
+        write_only=True
+    )
+    passenger_id = serializers.PrimaryKeyRelatedField(
+        queryset=Passenger.objects.all(),
+        source="passenger",
+        write_only=True
+    )
+
+    class Meta:
+        model = PassengerReject
+        fields = ["order_id", "passenger_id", "comment"]
+
+class PassengerToDriverReviewCreateSerializer(serializers.ModelSerializer):
+    order_id = serializers.PrimaryKeyRelatedField(
+        queryset=Order.objects.all(),
+        source="order",
+        write_only=True
+    )
+    passenger_id = serializers.PrimaryKeyRelatedField(
+        queryset=Passenger.objects.all(),
+        source="passenger",
+        write_only=True
+    )
+
+    class Meta:
+        model = PassengerToDriverReview
+        fields = ["order_id", "passenger_id", "comment", "rate"]
+
+    def validate(self, attrs):
+        order = attrs.get("order")
+        passenger = attrs.get("passenger")
+        rate = attrs.get("rate")
+
+        # rate nazorati (choices bor, lekin aniq xabar uchun)
+        if rate is not None and rate not in [1, 2, 3, 4, 5]:
+            raise serializers.ValidationError({"rate": "Rate 1 dan 5 gacha bo‘lishi kerak."})
+
+        # order driverga biriktirilganmi?
+        if order and not getattr(order, "driver_id", None):
+            raise serializers.ValidationError({"order_id": "Bu orderda driver hali biriktirilmagan."})
+
+        # order shu passenger’ga tegishlimi? (sizning Order.user = telegram_id bo‘lsa)
+        # Eslatma: Passenger modelingizda telegram_id bormi deb shunga moslab yozdim.
+        if order and passenger:
+            if getattr(passenger, "telegram_id", None) != getattr(order, "user", None):
+                raise serializers.ValidationError({"order_id": "Bu order sizga tegishli emas."})
+
+        # duplicate review’ni oldindan ushlash (DB constraint bilan ham ushlanadi)
+        if order and passenger:
+            exists = PassengerToDriverReview.objects.filter(order=order, passenger=passenger).exists()
+            if exists:
+                raise serializers.ValidationError("Bu order uchun review allaqachon yozilgan.")
+
+        return attrs
