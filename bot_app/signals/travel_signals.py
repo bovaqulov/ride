@@ -49,7 +49,7 @@ def send_message_view(order_pk):
         f"Holat: {order_data.get('status', '').title()}\n"
         f"Buyurtma turi: {order_data.get('order_type', '').title()}\n\n"
         f"📍 Manzil:\n"
-        f"Yo'nalish: {}\n"
+        f"Yo'nalish: {route.get_routes()}\n"
         f"🚌 Travel klassi: {content.get('travel_class', '').title()}\n"
         f"💰 Narxi: {content.get('price')}\n"
         f"💬 Izoh: {content.get("comment", 'izoh yuq')}\n"
