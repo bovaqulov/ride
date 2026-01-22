@@ -29,13 +29,12 @@ class BotClientAdmin(admin.ModelAdmin):
 @admin.register(PassengerTravel)
 class PassengerTravelAdmin(admin.ModelAdmin):
     list_display = [
-        'creator_name',
-        "start_time",
-        'locations',
+        'get_creator_name',
+        'get_start_time',
+        'get_locations',
         'passenger',
         'has_woman',
-        "comment",
-
+        'comment',
     ]
 
     list_filter = [ 'has_woman', 'created_at']
@@ -373,8 +372,6 @@ class PassengerAdmin(admin.ModelAdmin):
 @admin.register(Tariff)
 class TariffInline(admin.ModelAdmin):
     list_display = ('id', 'title', 'is_active')
-
-
 
 @admin.register(Route)
 class RouteAdmin(admin.ModelAdmin):
