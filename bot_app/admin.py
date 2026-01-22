@@ -182,7 +182,7 @@ class DriverAdmin(admin.ModelAdmin):
         extra = 0
         max_num = 1
     # Add 'route_id' to list_display to make it visible
-    list_display = ("new_full_name", "car_info", "phone", "status", "locations", "amount",)
+    list_display = ("new_full_name", "car_info", "phone", "status", "route_id", "amount",)
 
     # Add 'route_id' to list_editable to make it editable
     list_editable = ("amount", "status", "route_id")
@@ -193,13 +193,6 @@ class DriverAdmin(admin.ModelAdmin):
     inlines = [DriverGalleryInline, CarInline, DriverTransactionInline]
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
-
-    def locations(self, obj):
-        from_location: City = obj.from_location
-        to_location: City = obj.to_location
-        return f"{from_location.title.title()} → {to_location.title.title()}"
-
-    locations.short_description = "Yo'nalish"
 
     def new_full_name(self, obj):
         return f"{obj.full_name}({obj.telegram_id})"
