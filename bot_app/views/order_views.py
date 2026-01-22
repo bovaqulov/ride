@@ -5,7 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from ..models import Order, PassengerReject
+from ..models import Order
 from ..serializers.order import (
     OrderSerializer, OrderCreateSerializer, OrderUpdateSerializer, OrderListSerializer, PassengerRejectCreateSerializer,
     PassengerToDriverReviewCreateSerializer,
@@ -73,20 +73,22 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path="reject")
     def reject(self, request):
-        serializer = PassengerRejectCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
 
-        with transaction.atomic():
-            reject_obj = serializer.save()  # PassengerReject yaratildi
+            serializer = PassengerRejectCreateSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-            # FK orqali order instance’ni olish
-            order = reject_obj.order
-            if order is not None:
-                order.status = "rejected"
-                order.save(update_fields=["status"])
+            with transaction.atomic():
+                reject_obj = serializer.save()
 
-        return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+                order = reject_obj.order
+                if order is not None:
+                    order.status = "rejected"
+                    order.save(update_fields=["status"])
 
+            return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_200_OK)
     @action(detail=False, methods=['post'], url_path="review")
     def review(self, request):
         serializer = PassengerToDriverReviewCreateSerializer(data=request.data)

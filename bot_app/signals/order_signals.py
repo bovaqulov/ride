@@ -16,7 +16,7 @@ def update_order(sender, instance: Order, **kwargs):
             driver.amount -= instance.content_object.price * 0.05
             driver.save()
         except Exception as e:
-            pass
+            print(e)
 
         notify_passenger_bot.delay(instance.pk)
 
