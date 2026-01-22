@@ -4,7 +4,8 @@ from rest_framework import serializers
 
 from .bot_client import BotClientSerializer
 from .city import CitySerializer
-from ..models import PassengerTravel, Order, BotClient, CityPrice, City, Route, Tariff
+from .passenger import PassengerSerializer
+from ..models import PassengerTravel, Order, BotClient, CityPrice, City, Route, Tariff, Passenger
 
 
 class PassengerTravelSerializer(serializers.ModelSerializer):
@@ -51,9 +52,9 @@ class PassengerTravelSerializer(serializers.ModelSerializer):
     def get_creator(self, obj):
         """Get creator after object is created"""
         try:
-            creator = BotClient.objects.get(telegram_id=obj.user)
-            return BotClientSerializer(creator).data
-        except BotClient.DoesNotExist:
+            creator = Passenger.objects.get(telegram_id=obj.user)
+            return PassengerSerializer(creator).data
+        except Passenger.DoesNotExist:
             return {}
 
     def get_price(self, obj):

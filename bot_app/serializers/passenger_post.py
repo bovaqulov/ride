@@ -3,7 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 
 from .bot_client import BotClientSerializer
-from ..models import PassengerPost, Order, BotClient, Route
+from .passenger import PassengerSerializer
+from ..models import PassengerPost, Order, BotClient, Route, Passenger
 
 
 class PassengerPostSerializer(serializers.ModelSerializer):
@@ -36,11 +37,9 @@ class PassengerPostSerializer(serializers.ModelSerializer):
     def get_creator(self, obj):
         """Get creator after object is created"""
         try:
-            creator = BotClient.objects.get(
-                telegram_id=obj.user
-            )
-            return BotClientSerializer(creator).data
-        except BotClient.DoesNotExist:
+            creator = Passenger.objects.get(telegram_id=obj.user)
+            return PassengerSerializer(creator).data
+        except Passenger.DoesNotExist:
             return {}
 
 class PassengerPostCreateSerializer(serializers.ModelSerializer):
@@ -75,7 +74,7 @@ class PassengerPostListSerializer(serializers.ModelSerializer):
     def get_creator(self, obj):
         """Get creator after object is created"""
         try:
-            creator = BotClient.objects.get(telegram_id=obj.user)
-            return BotClientSerializer(creator).data
-        except BotClient.DoesNotExist:
+            creator = Passenger.objects.get(telegram_id=obj.user)
+            return PassengerSerializer(creator).data
+        except Passenger.DoesNotExist:
             return {}
