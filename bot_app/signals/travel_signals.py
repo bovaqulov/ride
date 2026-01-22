@@ -28,7 +28,9 @@ def send_message_view(order_pk):
     creator = order_data.get("creator", {})
     content = order_data.get("content_object", {})
     route = Route.objects.get(pk=content.get("route"))
-    # created_at ni o'qishli formatga o'tkazish
+
+    tariff = content.get("tariff")
+
     created_at_str = content.get('created_at')
     if created_at_str:
         try:
@@ -50,7 +52,7 @@ def send_message_view(order_pk):
         f"Buyurtma turi: {order_data.get('order_type', '').title()}\n\n"
         f"📍 Manzil:\n"
         f"Yo'nalish: {route.get_routes()}\n"
-        f"🚌 Travel klassi: {content.get('travel_class', '').title()}\n"
+        f"🚌 Travel klassi: {content.get('tariff', {}).get("title", "")}\n"
         f"💰 Narxi: {content.get('price')}\n"
         f"💬 Izoh: {content.get("comment", 'izoh yuq')}\n"
         f"💰 Qancha keshbek qo'llanildi: {content.get("cashback", 0)}\n"
