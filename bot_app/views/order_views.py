@@ -82,13 +82,14 @@ class OrderViewSet(viewsets.ModelViewSet):
                 reject_obj = serializer.save()
 
                 order = reject_obj.order
-                if order is not None:
-                    order.status = "rejected"
-                    order.save(update_fields=["status"])
+                order.status = "rejected"
+                order.save(update_fields=["status"])
 
             return Response(OrderSerializer(order).data, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_200_OK)
+
+
     @action(detail=False, methods=['post'], url_path="review")
     def review(self, request):
         serializer = PassengerToDriverReviewCreateSerializer(data=request.data)
