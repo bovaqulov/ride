@@ -122,7 +122,7 @@ class Driver(models.Model):
     telegram_id = models.BigIntegerField(unique=True, null=True, blank=True, verbose_name="Telegram ID")
     full_name = models.CharField(max_length=200, default='', verbose_name="Haydovchi ismi")
     total_rides = models.IntegerField(default=0)
-    route_id = models.ForeignKey("Route", on_delete=models.SET_NULL, null=True, blank=True)
+    route_id = models.ForeignKey("Route", on_delete=models.SET_NULL, null=True, blank=True, verbose_name="Yo'nalishi")
     phone = models.CharField(max_length=50, unique=True, null=True, blank=True)
     rating = models.IntegerField(default=5)
     from_location = models.ForeignKey(
@@ -145,7 +145,7 @@ class Driver(models.Model):
     )
     status = models.CharField(max_length=10, choices=DriverStatus.choices, default=DriverStatus.OFFLINE,
                               verbose_name="Haydovchi xolati")
-    amount = models.IntegerField(default=150000, verbose_name="Haudovchi mablag'i")
+    amount = models.IntegerField(default=150000, verbose_name="Haydovchi mablag'i")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

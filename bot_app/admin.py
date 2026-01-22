@@ -1,5 +1,6 @@
 
 from django.contrib import admin
+from django.forms import ModelForm
 from django.utils.safestring import mark_safe
 
 from .models import (
@@ -159,12 +160,15 @@ class PassengerPostAdmin(admin.ModelAdmin):
         }),
     )
 
+
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
     class CarInline(admin.TabularInline):
         model = Car
         extra = 1
         readonly_fields = ("created_at", "updated_at")
+        # Make tariff editable in inline
+        fields = ('car_number', 'car_model', 'car_color', 'tariff', 'created_at', 'updated_at')
 
     class DriverTransactionInline(admin.TabularInline):
         model = DriverTransaction
@@ -177,11 +181,15 @@ class DriverAdmin(admin.ModelAdmin):
         can_delete = False
         extra = 0
         max_num = 1
-
+    # Add 'route_id' to list_display to make it visible
     list_display = ("new_full_name", "car_info", "phone", "status", "locations", "amount",)
-    list_filter = ("phone", "status")
-    search_fields = ("telegram_id", "phone")
-    list_editable = ("amount", "status")
+
+    # Add 'route_id' to list_editable to make it editable
+    list_editable = ("amount", "status", "route_id")
+
+    list_filter = ("phone", "status", "route_id")  # Optional: add route_id to filters
+    search_fields = ("telegram_id", "phone", "route_id__name")  # Optional: search by route name
+
     inlines = [DriverGalleryInline, CarInline, DriverTransactionInline]
     readonly_fields = ("created_at", "updated_at")
     ordering = ("-created_at",)
@@ -201,12 +209,16 @@ class DriverAdmin(admin.ModelAdmin):
     def car_info(self, obj):
         try:
             cars = Car.objects.filter(driver_id=obj.id).first()
-            return mark_safe(f"<b>{cars.car_model}({cars.car_number})</b>")
+            if cars:
+                tariff_info = f" ({cars.tariff})" if cars.tariff else ""
+                return mark_safe(f"<b>{cars.car_model}({cars.car_number}){tariff_info}</b>")
         except Exception as e:
             print(e)
-            return ""
+        return ""
 
     car_info.short_description = mark_safe("<b>Avtomobil ma'lumotlari</b>")
+
+
 
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):
@@ -256,6 +268,7 @@ class OrderAdmin(admin.ModelAdmin):
         'driver__phone',
 
     ]
+    list_editable = ["status", "driver"]
 
     # Readonly maydonlar
     readonly_fields = [
