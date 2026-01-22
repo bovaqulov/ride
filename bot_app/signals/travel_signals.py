@@ -27,9 +27,7 @@ def send_message_view(order_pk):
     order_data = OrderSerializer(order_n).data
     creator = order_data.get("creator", {})
     content = order_data.get("content_object", {})
-    route = Route.objects.get(pk=content.get("route"))
-
-    tariff = content.get("tariff")
+    route = Route.objects.get(pk=content.get("route_id"))
 
     created_at_str = content.get('created_at')
     if created_at_str:
