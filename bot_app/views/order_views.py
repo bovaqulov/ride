@@ -92,13 +92,16 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path="review")
     def review(self, request):
-        serializer = PassengerToDriverReviewCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer = PassengerToDriverReviewCreateSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        with transaction.atomic():
-            review_obj = serializer.save()
+            with transaction.atomic():
+                review_obj = serializer.save()
 
-        return Response(
-            {"message": "success", "id": review_obj.id},
-            status=status.HTTP_201_CREATED
-        )
+            return Response(
+                {"message": "success", "id": review_obj.id},
+                status=status.HTTP_201_CREATED
+            )
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_200_OK)
