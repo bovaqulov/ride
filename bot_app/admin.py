@@ -30,9 +30,8 @@ class BotClientAdmin(admin.ModelAdmin):
 class PassengerTravelAdmin(admin.ModelAdmin):
     list_display = [
         'creator_name',
-        "get_start_time",
-        'get_locations',
-        'comment',
+        "start_time",
+        'locations',
         'passenger',
         'has_woman',
         "comment",
@@ -59,14 +58,14 @@ class PassengerTravelAdmin(admin.ModelAdmin):
     get_start_time.short_description = "Boshlanish vaqti"
     get_start_time.admin_order_field = 'start_time'
 
-    def creator_name(self, obj):
+    def get_creator_name(self, obj):
         try:
             client = BotClient.objects.get(telegram_id=obj.user)
             return f"{client.full_name}({obj.user})"
         except (BotClient.DoesNotExist, ImportError):
             return str(obj.user)
 
-    creator_name.short_description = "Pochta egasi"
+    get_creator_name.short_description = "Sayohatchi egasi"
 
     def get_locations(self, obj):
         try:
