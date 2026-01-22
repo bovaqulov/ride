@@ -362,7 +362,7 @@ class RouteCashback(models.Model):
 
 class Reject(models.Model):
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True)
-    comment = models.TextField(default='')
+    comment = models.TextField(null=True, blank=True)
 
     class Meta:
         abstract = True
