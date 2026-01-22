@@ -49,7 +49,6 @@ class CashbackViewSet(viewsets.ModelViewSet):
             })
         except Cashback.DoesNotExist:
             bot_client = BotClient.objects.filter(telegram_id=telegram_id)
-            print(bot_client)
             if bot_client.exists():
                 cashback = Cashback.objects.create(telegram_id=telegram_id)
                 serializer = self.get_serializer(cashback)

@@ -48,6 +48,7 @@ class Cashback(models.Model):
     :param telegram_id:
     :arg amount:
     """
+
     telegram_id = models.BigIntegerField(unique=True)
     amount = models.PositiveIntegerField(default=0)
 
@@ -335,6 +336,7 @@ class PassengerToDriverReview(models.Model):
 
     passenger = models.ForeignKey(Passenger, on_delete=models.SET_NULL, null=True, blank=True)
     order = models.ForeignKey(Order, on_delete=models.SET_NULL, null=True, blank=True)
+    feedback = models.JSONField(null=True, blank=True)
     comment = models.TextField(default='')
     rate = models.IntegerField(default=DriverRateChoices.FIVE, choices=DriverRateChoices.choices)
     created_at = models.DateTimeField(auto_now_add=True)

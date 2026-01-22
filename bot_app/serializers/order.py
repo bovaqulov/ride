@@ -228,7 +228,7 @@ class PassengerToDriverReviewCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PassengerToDriverReview
-        fields = ["order_id", "passenger_id", "comment", "rate"]
+        fields = ["order_id", "passenger_id", "comment", "rate", "feedback"]
 
     def validate(self, attrs):
         order = attrs.get("order")

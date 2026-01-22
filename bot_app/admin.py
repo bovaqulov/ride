@@ -161,27 +161,25 @@ class PassengerPostAdmin(admin.ModelAdmin):
         }),
     )
 
-
-class CarInline(admin.TabularInline):
-    model = Car
-    extra = 1
-    readonly_fields = ("created_at", "updated_at")
-
-class DriverTransactionInline(admin.TabularInline):
-    model = DriverTransaction
-    extra = 1
-    readonly_fields = ("created_at",)
-
-class DriverGalleryInline(admin.StackedInline):
-    """DriverGallery modelini Driver adminida inline ko'rinishda ko'rsatish"""
-    model = DriverGallery
-    can_delete = False
-    extra = 0
-    max_num = 1
-
-
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
+    class CarInline(admin.TabularInline):
+        model = Car
+        extra = 1
+        readonly_fields = ("created_at", "updated_at")
+
+    class DriverTransactionInline(admin.TabularInline):
+        model = DriverTransaction
+        extra = 1
+        readonly_fields = ("created_at",)
+
+    class DriverGalleryInline(admin.StackedInline):
+        """DriverGallery modelini Driver adminida inline ko'rinishda ko'rsatish"""
+        model = DriverGallery
+        can_delete = False
+        extra = 0
+        max_num = 1
+
     list_display = ("new_full_name", "car_info", "phone", "status", "locations", "amount",)
     list_filter = ("phone", "status")
     search_fields = ("telegram_id", "phone")
@@ -211,10 +209,6 @@ class DriverAdmin(admin.ModelAdmin):
             return ""
 
     car_info.short_description = mark_safe("<b>Avtomobil ma'lumotlari</b>")
-
-
-
-
 
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):
@@ -306,6 +300,7 @@ class OrderAdmin(admin.ModelAdmin):
 
 @admin.register(Passenger)
 class PassengerAdmin(admin.ModelAdmin):
+
     # Ro'yxat ko'rinishidagi ustunlar
     list_display = [
         'id',
@@ -379,11 +374,6 @@ class PassengerAdmin(admin.ModelAdmin):
 @admin.register(Tariff)
 class TariffInline(admin.ModelAdmin):
     list_display = ('id', 'title', 'is_active')
-
-
-
-
-
 
 @admin.register(Route)
 class RouteAdmin(admin.ModelAdmin):
