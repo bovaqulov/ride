@@ -247,6 +247,9 @@ class Route(models.Model):
     )
     is_active = models.BooleanField(default=True)
 
+    def get_routes(self):
+        return f"{self.from_city.title} -> {self.to_city.title}"
+
     def __str__(self):
         return f"{self.from_city} -> {self.to_city}"
 

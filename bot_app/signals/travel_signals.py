@@ -6,7 +6,7 @@ from django.db import transaction
 import logging
 from telebot import TeleBot
 from configuration import env
-from ..models import PassengerTravel, OrderType, PassengerPost, Order, Cashback, CityPrice, RouteCashback
+from ..models import PassengerTravel, OrderType, PassengerPost, Order, Cashback, CityPrice, RouteCashback, Route
 
 from ..tasks.travel_tasks import notify_driver_bot
 
@@ -27,7 +27,7 @@ def send_message_view(order_pk):
     order_data = OrderSerializer(order_n).data
     creator = order_data.get("creator", {})
     content = order_data.get("content_object", {})
-
+    route = Route.objects.get(pk=content.get("route"))
     # created_at ni o'qishli formatga o'tkazish
     created_at_str = content.get('created_at')
     if created_at_str:
@@ -49,10 +49,11 @@ def send_message_view(order_pk):
         f"Holat: {order_data.get('status', '').title()}\n"
         f"Buyurtma turi: {order_data.get('order_type', '').title()}\n\n"
         f"📍 Manzil:\n"
-        f"Qayerdan: {content.get('from_location', {}).get('city', '').title()}\n"
-        f"Qayerga: {content.get('to_location', {}).get('city', '').title()}\n\n"
+        f"Yo'nalish: {}\n"
         f"🚌 Travel klassi: {content.get('travel_class', '').title()}\n"
         f"💰 Narxi: {content.get('price')}\n"
+        f"💬 Izoh: {content.get("comment", 'izoh yuq')}\n"
+        f"💰 Qancha keshbek qo'llanildi: {content.get("cashback", 0)}\n"
         f"👥 Yo‘lovchilar soni: {content.get('passenger')}\n"
         f"🧕 Ayol yo‘lovchi mavjud: {'Ha' if content.get('has_woman') else 'Yo‘q'}\n"
         f"🕒 Yaratilgan vaqti: {created_at_formatted}")
