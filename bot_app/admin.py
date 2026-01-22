@@ -374,6 +374,8 @@ class PassengerAdmin(admin.ModelAdmin):
 class TariffInline(admin.ModelAdmin):
     list_display = ('id', 'title', 'is_active')
 
+
+
 @admin.register(Route)
 class RouteAdmin(admin.ModelAdmin):
     class CityPriceAdmin(admin.TabularInline):
