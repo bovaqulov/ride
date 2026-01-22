@@ -107,7 +107,7 @@ def create_order(sender, instance, created, **kwargs):
 
         # Telegram xabar yuborish
 
-        # transaction.on_commit(lambda: send_message_view(order.pk))
+        transaction.on_commit(lambda: send_message_view(order.pk))
 
         logger.info(f"Order {order.pk} created from {sender.__name__} {instance.pk}")
     except Exception as e:
