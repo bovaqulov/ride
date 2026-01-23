@@ -1,7 +1,7 @@
 # bot_app/filters/driver_filter.py
 from django.db.models.functions import Coalesce
 from django_filters import rest_framework as filters
-from django.db.models import Q, OuterRef, Exists, Subquery, Count
+from django.db.models import Q, OuterRef, Subquery, Count
 from ..models import Driver, Car, DriverTransaction, DriverStatus, Order, TravelStatus
 
 
@@ -12,6 +12,7 @@ class DriverFilter(filters.FilterSet):
     to_location = filters.CharFilter(field_name='to_location__title', lookup_expr='icontains')
     phone = filters.CharFilter(field_name="phone", lookup_expr='icontains')
     telegram_id = filters.CharFilter(field_name="telegram_id", lookup_expr='icontains')
+    tariff_id = filters.NumberFilter(method='filter_tariff_id')
 
     # Range filterlar
     min_amount = filters.NumberFilter(field_name='amount', lookup_expr='gte')
@@ -25,36 +26,19 @@ class DriverFilter(filters.FilterSet):
 
     # Universal location filter
     location = filters.CharFilter(method='filter_by_location')
-    car_class = filters.CharFilter(method='filter_by_car_class')
 
     # Yangi filter: Faqat bo'sh driverlarni olish
     exclude_busy = filters.BooleanFilter(method='filter_exclude_busy', label="Exclude busy drivers")
 
     class Meta:
         model = Driver
-        fields = ['telegram_id', 'status', 'from_location', 'to_location', "exclude_busy"]
+        fields = ['telegram_id', 'status', 'from_location', 'to_location', "exclude_busy", "tariff_id"]
 
     def filter_by_location(self, queryset, name, value):
         return queryset.filter(
             Q(from_location__title__icontains=value) |
             Q(to_location__title__icontains=value)
         )
-
-    def filter_by_car_class(self, queryset, name, value):
-        """
-        economy  -> economy
-        standard -> standard, comfort
-        comfort  -> comfort
-        """
-
-        if isinstance(value, (list, tuple, set)):
-            return queryset.filter(
-                driver__car_class__in=value
-            ).distinct()
-
-        return queryset.filter(
-            driver__car_class=value
-        ).distinct()
 
     def filter_exclude_busy(self, queryset, name, value):
         """Faol orderlari 4 tadan ortiq bo'lgan driverlarni chiqarib tashlash"""
@@ -82,6 +66,12 @@ class DriverFilter(filters.FilterSet):
             )
 
         return queryset
+
+    def filter_tariff_id(self, queryset, name, value):
+        """Tariff ID bo'yicha filter - Car orqali"""
+        return queryset.filter(
+            driver__tariff_id=value
+        ).distinct()
 
 class CarFilter(filters.FilterSet):
     car_number = filters.CharFilter(lookup_expr='icontains')

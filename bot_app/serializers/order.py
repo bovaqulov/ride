@@ -1,4 +1,6 @@
 # serializers.py
+import logging
+
 from django.db.models import Q
 import json
 from rest_framework import serializers
@@ -8,10 +10,12 @@ from django.core.serializers.json import DjangoJSONEncoder
 from .driver import DriverSerializer
 from .passenger import PassengerSerializer
 from .bot_client import BotClientSerializer
+from .route import RouteSerializer
 from .tariff_serializer import TariffSerializer
 from ..models import Order, OrderType, Driver, BotClient, Passenger, CityPrice, Tariff, PassengerTravel, PassengerPost, \
-    PassengerReject, PassengerToDriverReview
+    PassengerReject, PassengerToDriverReview, Route
 
+logger = logging.getLogger(__name__)
 
 class ContentObjectSerializer(serializers.Serializer):
     """Generic content object serializer"""
@@ -20,7 +24,7 @@ class ContentObjectSerializer(serializers.Serializer):
         route_id = instance.route.id if getattr(instance, "route", None) else None
         tariff_id = instance.tariff.id if getattr(instance, "tariff", None) else None
 
-        price = CityPrice.objects.filter(Q(tariff=tariff_id) | Q(route=route_id)).first()
+        price = CityPrice.objects.filter(Q(tariff=tariff_id) & Q(route=route_id)).first()
         if price:
             price = price.price
         else:
@@ -65,6 +69,80 @@ class ContentObjectSerializer(serializers.Serializer):
         data = self.to_representation(instance)
         return json.loads(json.dumps(data, cls=DjangoJSONEncoder))
 
+class ContentObject2Serializer(serializers.Serializer):
+        """Generic content object serializer"""
+
+        def to_representation(self, instance):
+            route_id = instance.route.id if getattr(instance, "route", None) else None
+            tariff_id = instance.tariff.id if getattr(instance, "tariff", None) else None
+            price = CityPrice.objects.filter(Q(tariff=tariff_id) & Q(route=route_id)).first()
+
+            logger.warning(price)
+
+
+            if price:
+                price = price.price
+            else:
+                price = None
+
+
+            if route_id:
+                route = RouteSerializer(Route.objects.filter(id=route_id).first()).data
+            else:
+                route = {}
+
+            data = {
+                "price": price,
+                "route": route,
+                "tariff_id": tariff_id,
+                "from_location": instance.from_location,
+                "to_location": instance.to_location,
+                "cashback": instance.cashback,
+                "comment": instance.comment,
+                "start_time": instance.start_time.isoformat() if instance.start_time else None,
+                "created_at": instance.created_at.isoformat() if instance.created_at else None,
+            }
+
+            if isinstance(instance, PassengerTravel):
+                extra = {
+                    "passenger": instance.passenger,
+                    "has_woman": instance.has_woman,
+                }
+                return {**data, **extra}
+
+            if isinstance(instance, PassengerPost):
+                return data
+            return None
+
+
+class DriverOrderSerializer(serializers.ModelSerializer):
+    content_object = ContentObject2Serializer(read_only=True)
+    creator = serializers.SerializerMethodField()
+    driver_details = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = [
+            'id', 'user', 'creator', 'status', "driver_details",
+            'order_type', 'content_object',
+        ]
+        read_only_fields = ['id', 'content_object']
+
+    def get_creator(self, obj):
+        try:
+            creator = Passenger.objects.get(telegram_id=obj.user)
+            return PassengerSerializer(creator).data
+        except Exception as e:
+            print("orderserializer error: ", str(e))
+            return {}
+
+    def get_driver_details(self, obj):
+        try:
+            driver = Driver.objects.get(id=obj.driver.id)
+            return DriverSerializer(driver).data
+        except Exception as e:
+            return None
+
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -86,7 +164,7 @@ class OrderSerializer(serializers.ModelSerializer):
             creator = Passenger.objects.get(telegram_id=obj.user)
             return PassengerSerializer(creator).data
         except Exception as e:
-            print(e)
+            print("orderserializer error: ", str(e))
             return {}
 
     def to_representation(self, instance):
@@ -194,7 +272,7 @@ class OrderListSerializer(serializers.ModelSerializer):
             creator = BotClient.objects.get(telegram_id=obj.user)
             return BotClientSerializer(creator).data
         except Exception as e:
-            print(e)
+            print("order list error: ", e)
             return {}
 
 

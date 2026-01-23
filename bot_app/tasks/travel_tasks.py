@@ -10,7 +10,7 @@ def notify_driver_bot(order_id):
         driver_service = DriverService()
         driver_service.notify(order_id)
     except Exception as e:
-        print(e)
+        print("notiy driver error: ", str(e))
 
 
 @shared_task

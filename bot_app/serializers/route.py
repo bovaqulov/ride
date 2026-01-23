@@ -24,6 +24,15 @@ class CityPriceOptimizedSerializer(serializers.ModelSerializer):
 
 
 
+class RouteSerializer(serializers.ModelSerializer):
+    route_id = serializers.IntegerField(source='id',read_only=True)
+    from_city = CitySimpleSerializer(read_only=True)
+    to_city = CitySimpleSerializer(read_only=True)
+
+    class Meta:
+        model = Route
+        fields = ("route_id", "from_city", "to_city")
+
 
 class RoutePriceOptimizedSerializer(serializers.ModelSerializer):
     route_id = serializers.IntegerField(source='id',read_only=True)

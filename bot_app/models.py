@@ -380,3 +380,17 @@ class PassengerReject(Reject):
     def __str__(self):
         return f"{self.passenger}"
 
+
+class Categories(models.Model):
+    name = models.CharField(unique=True)
+    description = models.CharField(blank=True, null=True)
+    order = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'categories'
+
+    def __str__(self):
+        return self.name
+
+

@@ -2,8 +2,8 @@
 from rest_framework import serializers
 
 from .bot_client import BotClientSerializer
-from .city import CitySerializer
-from ..models import Driver, Car, DriverTransaction, BotClient, DriverGallery
+from .route import CitySimpleSerializer
+from ..models import Driver, Car, DriverTransaction, BotClient, DriverGallery, Route, Tariff
 
 
 class DriverGallerySerializer(serializers.ModelSerializer):
@@ -14,10 +14,14 @@ class DriverGallerySerializer(serializers.ModelSerializer):
         fields = ['profile_image']
         read_only_fields = ['profile_image']
 
+class TariffDriverSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tariff
+        fields = '__all__'
 
 class DriverCarSerializer(serializers.ModelSerializer):
     """Driver ga tegishli carlarni olish uchun serializer"""
-
+    tariff = TariffDriverSerializer(read_only=True)
     class Meta:
         model = Car
         fields = [
@@ -25,6 +29,7 @@ class DriverCarSerializer(serializers.ModelSerializer):
             'car_number',
             'car_model',
             'car_color',
+            'tariff',
         ]
         read_only_fields = ('created_at', 'updated_at')
 
@@ -100,14 +105,23 @@ class DriverTransactionSerializer(serializers.ModelSerializer):
             pass
         return None
 
+class RouteDriverSerializer(serializers.ModelSerializer):
+    from_city = CitySimpleSerializer(read_only=True)
+    to_city = CitySimpleSerializer(read_only=True)
+    route_id = serializers.IntegerField(source='id',read_only=True)
+
+    class Meta:
+        model = Route
+        fields = "route_id", "from_city", "to_city"
+
+
+
 
 class DriverSerializer(serializers.ModelSerializer):
     cars = DriverCarSerializer(many=True, read_only=True, source='driver')
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    profile_image = serializers.SerializerMethodField()  # Yangi qo'shildi
-    full_profile_image_url = serializers.SerializerMethodField()  # To'liq URL uchun
-    from_location = serializers.CharField(source='from_location.title', read_only=True)
-    to_location = serializers.CharField(source='to_location.title', read_only=True)
+    full_profile_image_url = serializers.SerializerMethodField()
+    route_id = RouteDriverSerializer(read_only=True)
+
 
     class Meta:
         model = Driver
@@ -117,25 +131,13 @@ class DriverSerializer(serializers.ModelSerializer):
             "full_name",
             "total_rides",
             "phone",
+            "route_id",
             "rating",
-            "from_location",
-            "to_location",
             "status",
             "amount",
             "cars",
-            "status_display",
-            "profile_image",  # Yangi qo'shildi
-            "full_profile_image_url"  # Yangi qo'shildi
+            "full_profile_image_url",
         ]
-        ref_name = 'DriverMainSerializer'
-
-    def get_profile_image(self, obj):
-        """Driverning profile rasmini olish (relative path)"""
-        try:
-            gallery = DriverGallery.objects.get(telegram_id=obj)
-            return gallery.profile_image.path if gallery.profile_image else None
-        except DriverGallery.DoesNotExist:
-            return ""
 
     def get_full_profile_image_url(self, obj):
         """Driverning profile rasmini to'liq URL sifatida olish"""
@@ -150,7 +152,6 @@ class DriverSerializer(serializers.ModelSerializer):
             pass
         return ""
 
-
 class DriverListSerializer(serializers.ModelSerializer):
     cars_count = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -163,18 +164,16 @@ class DriverListSerializer(serializers.ModelSerializer):
         fields = [
             'id',
             'telegram_id',
-            'from_location',
-            'to_location',
             'status',
+            'route_id',
             'status_display',
             'amount',
             'cars_count',
             "driver_info",
             'latest_car',
-            'profile_image',  # Yangi qo'shildi
+            'profile_image',
             'created_at'
         ]
-        ref_name = 'DriverListSerializer'
 
     def get_driver_info(self, obj):
         try:
@@ -208,6 +207,8 @@ class DriverListSerializer(serializers.ModelSerializer):
         except DriverGallery.DoesNotExist:
             pass
         return None
+
+
 
 
 class DriverUpdateSerializer(serializers.ModelSerializer):
@@ -337,3 +338,51 @@ class DriverCreateSerializer(serializers.ModelSerializer):
             )
 
         return driver
+
+
+
+
+class DriverRouteChangeSerializer(serializers.Serializer):
+    """Faqat driver route_id ni o'zgartirish uchun"""
+    route_id = serializers.IntegerField(required=True)
+
+    def validate_route_id(self, value):
+        # Route mavjudligini tekshirish
+        if not Route.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Bu yo'nalish topilmadi")
+        return value
+
+    def update(self, instance, validated_data):
+        """Faqat route_id ni yangilash"""
+        route_id = validated_data.get('route_id')
+
+        # Yangi yo'nalishni olish
+        try:
+            new_route = Route.objects.get(id=route_id)
+        except Route.DoesNotExist:
+            raise serializers.ValidationError("Yo'nalish topilmadi")
+
+        # Eski ma'lumotlarni saqlash
+        old_route = instance.route_id
+        old_from = instance.from_location
+        old_to = instance.to_location
+
+        # Route dan shahar ma'lumotlarini olish
+        if new_route.from_city and new_route.to_city:
+            # Driverning from_location va to_location ni route ga moslashtirish
+            instance.route_id = new_route
+            instance.from_location = new_route.from_city
+            instance.to_location = new_route.to_city
+            instance.save()
+
+            # Qo'shimcha ma'lumotlarni context ga saqlash
+            if hasattr(self, '_context'):
+                self.context['old_route'] = old_route
+                self.context['old_from'] = old_from
+                self.context['old_to'] = old_to
+        else:
+            # Faqat route_id ni yangilash (agar shahar ma'lumotlari yo'q bo'lsa)
+            instance.route_id = new_route
+            instance.save()
+
+        return instance

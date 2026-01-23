@@ -1,9 +1,13 @@
-from typing import List, Optional
+"""
+Project env
+"""
 
+#imports
 import dj_database_url
+from typing import List, Optional
 from pydantic_settings import BaseSettings
 
-
+# dataclass
 class EventSettings(BaseSettings):
     # debug
     DEBUG: bool = True
@@ -38,13 +42,13 @@ class EventSettings(BaseSettings):
 
     @property
     def CELERY_BROKER_URL(self):
-        # return self.CELERY_BROKER_URL_DEMO
-        return self.REDIS_PUBLIC_URL
+        return self.CELERY_BROKER_URL_DEMO
+        # return self.REDIS_PUBLIC_URL
 
     @property
     def CELERY_RESULT_BACKEND(self):
-        # return self.CELERY_RESULT_BACKEND_DEMO
-        return self.REDIS_PUBLIC_URL
+        return self.CELERY_RESULT_BACKEND_DEMO
+        # return self.REDIS_PUBLIC_URL
 
     @property
     def ALLOWED_HOSTS(self) -> List[str]:
@@ -73,18 +77,19 @@ class EventSettings(BaseSettings):
 
     @property
     def PASSENGER_URL(self) -> str:
-        return self.PASSENGER_BOT_URL
-        # return "http://127.0.0.1:8888/"
+        # return self.PASSENGER_BOT_URL
+        return "http://127.0.0.1:8888/"
 
     @property
     def DRIVER_URL(self):
-        return self.DRIVER_BOT_URL
-        # return "http://127.0.0.1:8080/"
+        # return self.DRIVER_BOT_URL
+        return "http://127.0.0.1:8080/"
 
+# function
 def en():
     return EventSettings()
 
-
+# env
 env = en()
 
-# psql -h database-1.czic202o6e4s.eu-north-1.rds.amazonaws.com -U postgres -d postgres database connection
+

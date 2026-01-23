@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Sum
-from ..models import DriverStatus, Driver, DriverTransaction
+from ..models import DriverStatus, Driver, DriverTransaction, Route
 from ..serializers.driver import DriverSerializer, DriverListSerializer, DriverUpdateSerializer, \
     DriverTransactionSerializer, DriverCreateSerializer
 from ..filters.driver_filter import DriverFilter, DriverTransactionFilter
@@ -95,6 +95,50 @@ class DriverViewSet(viewsets.ModelViewSet):
 
         serializer = DriverListSerializer(drivers, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['patch'], url_path='update-route')
+    def update_route(self, request, pk=None):
+        try:
+            driver = Driver.objects.get(pk=pk)
+            route_id = request.data.get('route_id')
+
+            if not route_id:
+                return Response(
+                    {'error': 'route_id maydoni kerak'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Route ni tekshirish
+            try:
+                old_route = Route.objects.get(id=route_id)
+                new_route = Route.objects.filter(from_city=old_route.to_city, to_city=old_route.from_city).first()
+            except Exception as ex:
+                return Response(
+                    {'error': str(ex)},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            driver.route_id = new_route
+
+            driver.save()
+
+            serializer = DriverSerializer(driver, context={'request': request})
+
+            return Response({
+                'success': True,
+                'message': 'Yo\'nalish yangilandi',
+                'data': serializer.data,
+                'route_info': {
+                    'old_route_id': old_route.id if old_route else None,
+                    'new_route_id': new_route.id
+                }
+            })
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 class DriverTransactionViewSet(viewsets.ModelViewSet):
     """

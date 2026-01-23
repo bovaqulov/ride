@@ -7,14 +7,14 @@ class BotClientSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="id", read_only=True)
     class Meta:
         model = BotClient
-        fields = 'user_id', "telegram_id", "full_name", "language", "is_banned"
+        fields = 'user_id', "telegram_id", "full_name", "language", "is_banned", "username"
         read_only_fields = ('created_at', 'updated_at')
 
 class BotClientListSerializer(serializers.ModelSerializer):
     user_id = serializers.IntegerField(source="id", read_only=True)
     class Meta:
         model = BotClient
-        fields = ('user_id', 'telegram_id', 'username', 'full_name', 'is_banned', )
+        fields = ('user_id', 'telegram_id', 'username', 'full_name', 'language', 'is_banned', )
 
 class BotClientCreateSerializer(serializers.ModelSerializer):
     class Meta:

@@ -4,12 +4,17 @@ from rest_framework import serializers
 
 from .bot_client import BotClientSerializer
 from .passenger import PassengerSerializer
-from ..models import PassengerPost, Order, BotClient, Route, Passenger
+from ..models import PassengerPost, Order, BotClient, Route, Passenger, Tariff
 
 
 class PassengerPostSerializer(serializers.ModelSerializer):
     order_id = serializers.SerializerMethodField()
     creator = serializers.SerializerMethodField()
+    tariff_id = serializers.PrimaryKeyRelatedField(
+        source='tariff',
+        queryset=Tariff.objects.all(),
+        write_only=True
+    )
     route_id = serializers.PrimaryKeyRelatedField(
         source='route',
         queryset=Route.objects.all(),
@@ -19,7 +24,7 @@ class PassengerPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = PassengerPost
         fields = [
-            'id', 'creator', 'comment', 'start_time', 'order_id', 'from_location', 'to_location', "route_id",
+            'id', 'creator', 'comment', 'start_time', 'order_id', 'from_location', 'to_location', "route_id", "tariff_id"
         ]
         read_only_fields = ['id']
 
@@ -43,19 +48,22 @@ class PassengerPostSerializer(serializers.ModelSerializer):
             return {}
 
 class PassengerPostCreateSerializer(serializers.ModelSerializer):
-    creator = serializers.SerializerMethodField()
+    route_id = serializers.PrimaryKeyRelatedField(
+        source='route',
+        queryset=Route.objects.all(),
+        write_only=True
+    )
+    tariff_id = serializers.PrimaryKeyRelatedField(
+        source='tariff',
+        queryset=Tariff.objects.all(),
+        write_only=True
+    )
 
     class Meta:
         model = PassengerPost
-        fields = ['user', 'creator', 'comment', 'start_time', 'from_location', 'to_location', "cashback", "route_id"]
-
-    def get_creator(self, obj):
-        """Get creator after object is created"""
-        try:
-            creator = BotClient.objects.get(telegram_id=obj.user)
-            return BotClientSerializer(creator).data
-        except BotClient.DoesNotExist:
-            return {}
+        fields = [
+            'user', 'comment', 'route_id', 'start_time', 'from_location', 'to_location', 'tariff_id', 'cashback'
+        ]
 
 
 class PassengerPostUpdateSerializer(serializers.ModelSerializer):

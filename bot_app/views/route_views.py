@@ -7,7 +7,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.response import Response
 
 from ..models import Route, City
-from ..serializers.route import RoutePriceOptimizedSerializer, CitySimpleSerializer
+from ..serializers.route import RoutePriceOptimizedSerializer, CitySimpleSerializer, RouteSerializer
 
 
 class RouteViewSet(viewsets.ModelViewSet):
@@ -57,3 +57,9 @@ class RouteViewSet(viewsets.ModelViewSet):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+    @action(detail=False, methods=['get'], url_path='all')
+    def all_routes(self, request):
+        routes = Route.objects.filter(is_active=True).order_by('to_city')
+        return Response({"data": RouteSerializer(routes, many=True).data}, status=status.HTTP_200_OK)
+

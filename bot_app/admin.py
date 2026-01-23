@@ -1,6 +1,5 @@
 
 from django.contrib import admin
-from django.forms import ModelForm
 from django.utils.safestring import mark_safe
 
 from .models import (
@@ -160,7 +159,6 @@ class PassengerPostAdmin(admin.ModelAdmin):
         }),
     )
 
-
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
     class CarInline(admin.TabularInline):
@@ -210,8 +208,6 @@ class DriverAdmin(admin.ModelAdmin):
         return ""
 
     car_info.short_description = mark_safe("<b>Avtomobil ma'lumotlari</b>")
-
-
 
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):

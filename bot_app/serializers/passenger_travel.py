@@ -2,10 +2,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from rest_framework import serializers
 
-from .bot_client import BotClientSerializer
 from .city import CitySerializer
 from .passenger import PassengerSerializer
-from ..models import PassengerTravel, Order, BotClient, CityPrice, City, Route, Tariff, Passenger
+from ..models import PassengerTravel, Order, CityPrice, City, Route, Tariff, Passenger
 
 
 class PassengerTravelSerializer(serializers.ModelSerializer):
@@ -82,7 +81,7 @@ class PassengerTravelCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PassengerTravel
         fields = [
-            'user','comment', 'route_id', 'start_time', 'comment', 'from_location', 'to_location', 'tariff_id',
+            'user','comment', 'route_id', 'start_time', 'from_location', 'to_location', 'tariff_id',
             'passenger', 'cashback', 'has_woman'
         ]
 

@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from ..models import Order
 from ..serializers.order import (
     OrderSerializer, OrderCreateSerializer, OrderUpdateSerializer, OrderListSerializer, PassengerRejectCreateSerializer,
-    PassengerToDriverReviewCreateSerializer,
+    PassengerToDriverReviewCreateSerializer, DriverOrderSerializer,
 )
 from ..filters.order_filters import OrderFilter
 
@@ -89,7 +89,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_200_OK)
 
-
     @action(detail=False, methods=['post'], url_path="review")
     def review(self, request):
         try:
@@ -104,5 +103,14 @@ class OrderViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED
             )
 
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['get'], url_path="driver")
+    def driver(self, request, pk=None):
+        try:
+            orders = Order.objects.get(id=pk)
+            serializer = DriverOrderSerializer(orders).data
+            return Response(serializer, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

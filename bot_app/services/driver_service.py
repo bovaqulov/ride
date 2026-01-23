@@ -1,7 +1,9 @@
 
-from ..models import PassengerTravel, PassengerPost, Order, TravelStatus
-from ..serializers.order import OrderSerializer
+from ..models import Order
+from ..serializers.order import DriverOrderSerializer
 from ..services.base import BaseService
+
+
 class DriverService(BaseService):
 
     def notify(self, order_id: int):
@@ -10,7 +12,7 @@ class DriverService(BaseService):
         return self._request(
                 "POST",
                 "driver",
-                json=OrderSerializer(order).data)
+                json=DriverOrderSerializer(order).data)
 
 
 

@@ -1,13 +1,12 @@
-from django.db.models import Q
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 import logging
 from telebot import TeleBot
-from configuration import env
-from ..models import PassengerTravel, OrderType, PassengerPost, Order, Cashback, CityPrice, RouteCashback, Route
 
+from configuration import env
+from ..models import PassengerTravel, OrderType, PassengerPost, Order, Route
 from ..tasks.travel_tasks import notify_driver_bot
 
 logger = logging.getLogger(__name__)
@@ -88,27 +87,14 @@ def create_order(sender, instance, created, **kwargs):
             content_object=instance,
             object_id=instance.pk,
         )
-        try:
 
-            user = Cashback.objects.filter(telegram_id=instance.user).first()
-            if instance.cashback > 0:
-                user.amount -= instance.cashback
-                user.save()
-            else:
-                user.amount += (
-                        CityPrice.objects.filter(Q(route=instance.route) & Q(tariff=instance.tariff)).first() *
-                        RouteCashback.objects.filter(tariff=instance.tariff).first()).order_cashback
-                user.save()
-
-        except Exception as ex:
-            logger.error(ex)
 
         # Celery task ishga tushishi
         transaction.on_commit(lambda: notify_driver_bot.delay(order.pk))
 
         # Telegram xabar yuborish
 
-        transaction.on_commit(lambda: send_message_view(order.pk))
+        # transaction.on_commit(lambda: send_message_view(order.pk))
 
         logger.info(f"Order {order.pk} created from {sender.__name__} {instance.pk}")
     except Exception as e:
