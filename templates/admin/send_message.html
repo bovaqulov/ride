@@ -1,149 +1,643 @@
 {% extends "admin/base_site.html" %}
 {% load i18n admin_urls static admin_modify %}
 
+{% block extrastyle %}
+<style>
+:root {
+    --primary-color: #4361ee;
+    --primary-light: #4895ef;
+    --secondary-color: #3a0ca3;
+    --success-color: #4cc9f0;
+    --danger-color: #f72585;
+    --warning-color: #f8961e;
+    --dark-color: #2b2d42;
+    --light-color: #f8f9fa;
+    --border-radius: 12px;
+    --box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+body {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+}
+
+#content-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-header {
+    text-align: center;
+    margin-bottom: 40px;
+    position: relative;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    display: inline-block;
+    position: relative;
+    padding-bottom: 15px;
+}
+
+.page-header h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+    border-radius: 2px;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px;
+    margin: 40px 0;
+}
+
+.stat-card {
+    background: white;
+    border-radius: var(--border-radius);
+    padding: 25px;
+    text-align: center;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card:nth-child(1) .stat-icon { color: var(--primary-color); }
+.stat-card:nth-child(2) .stat-icon { color: var(--success-color); }
+.stat-card:nth-child(3) .stat-icon { color: var(--warning-color); }
+.stat-card:nth-child(4) .stat-icon { color: var(--danger-color); }
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.stat-card h3 {
+    font-size: 1rem;
+    color: var(--dark-color);
+    margin: 0 0 10px 0;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.stat-number {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--dark-color);
+    margin: 0;
+}
+
+.message-form-container {
+    background: white;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 40px;
+    margin-top: 30px;
+    position: relative;
+    overflow: hidden;
+}
+
+.message-form-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+}
+
+.form-section-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--dark-color);
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--light-color);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-section-title::before {
+    content: '';
+    width: 20px;
+    height: 20px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.form-group {
+    margin-bottom: 30px;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--dark-color);
+    font-size: 1.1rem;
+}
+
+select, textarea {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #e1e5eb;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: var(--transition);
+    background: white;
+}
+
+select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+textarea {
+    min-height: 200px;
+    resize: vertical;
+    line-height: 1.6;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.form-text {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 6px;
+}
+
+.char-counter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    font-size: 0.9rem;
+}
+
+.char-count {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.char-limit {
+    color: #6c757d;
+}
+
+.submit-btn {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    padding: 16px 40px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 40px auto 0;
+    min-width: 200px;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
+}
+
+.submit-btn:active {
+    transform: translateY(0);
+}
+
+.btn-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-spinner {
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-spinner .spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.preview-card {
+    background: var(--light-color);
+    border-radius: 10px;
+    padding: 25px;
+    margin-top: 30px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.preview-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark-color);
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.preview-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e1e5eb;
+    min-height: 100px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+
+    .message-form-container {
+        padding: 25px;
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+    }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--primary-color), var(--success-color));
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+/* Form elements styling */
+#id_message_type, #id_parse_mode {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234361ee' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 16px;
+    padding-right: 3rem;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+/* Loading overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    backdrop-filter: blur(5px);
+}
+
+.loading-content {
+    text-align: center;
+    background: white;
+    padding: 40px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+}
+
+.loading-spinner {
+    width: 60px;
+    height: 60px;
+    border: 5px solid var(--light-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 20px;
+}
+
+.loading-text {
+    font-size: 1.2rem;
+    color: var(--dark-color);
+    font-weight: 600;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div id="content-main">
-    <h1>📢 Telegram Xabar Yuborish</h1>
+    <div class="page-header">
+        <h1>📨 Telegram Xabar Yuborish</h1>
+        <p class="page-subtitle">Foydalanuvchilarga ommaviy xabar yuborish paneli</p>
+    </div>
 
     <div class="stats-container">
         <div class="stat-card">
-            <h3>👥 Jami Foydalanuvchilar</h3>
+            <span class="stat-icon">👥</span>
+            <h3>Jami Foydalanuvchilar</h3>
             <p class="stat-number">{{ total_users }}</p>
         </div>
         <div class="stat-card">
-            <h3>🚖 Haydovchilar</h3>
+            <span class="stat-icon">🚖</span>
+            <h3>Haydovchilar</h3>
             <p class="stat-number">{{ total_drivers }}</p>
         </div>
         <div class="stat-card">
-            <h3>👤 Yo'lovchilar</h3>
+            <span class="stat-icon">👤</span>
+            <h3>Yo'lovchilar</h3>
             <p class="stat-number">{{ total_passengers }}</p>
         </div>
         <div class="stat-card">
-            <h3>🚫 Bloklanganlar</h3>
+            <span class="stat-icon">🚫</span>
+            <h3>Bloklanganlar</h3>
             <p class="stat-number">{{ total_banned }}</p>
         </div>
     </div>
 
-    <div class="message-form">
+    <div class="message-form-container">
         <form method="post" id="messageForm">
             {% csrf_token %}
 
+            <div class="form-section-title">
+                <span>🎯 Xabar yuborish parametrlari</span>
+            </div>
+
             <div class="form-group">
-                <label>{{ form.message_type.label }}</label>
+                <label for="id_message_type">{{ form.message_type.label }}</label>
                 {{ form.message_type }}
-                <small class="form-text text-muted">
+                <small class="form-text">
                     Kimga xabar yubormoqchisiz?
                 </small>
             </div>
 
             <div class="form-group" id="customIdsGroup" style="display: none;">
-                <label>{{ form.custom_ids.label }}</label>
+                <label for="id_custom_ids">{{ form.custom_ids.label }}</label>
                 {{ form.custom_ids }}
-                <small class="form-text text-muted">
+                <small class="form-text">
                     {{ form.custom_ids.help_text }}
                 </small>
             </div>
 
             <div class="form-group">
-                <label>{{ form.parse_mode.label }}</label>
+                <label for="id_parse_mode">{{ form.parse_mode.label }}</label>
                 {{ form.parse_mode }}
+                <small class="form-text">
+                    Xabar formatlash turini tanlang
+                </small>
+            </div>
+
+            <div class="form-section-title">
+                <span>📝 Xabar matni</span>
             </div>
 
             <div class="form-group">
-                <label>{{ form.message.label }}</label>
+                <label for="id_message">{{ form.message.label }}</label>
                 {{ form.message }}
-                <small class="form-text text-muted">
+                <div class="char-counter">
+                    <span class="char-count" id="charCount">0</span>
+                    <span class="char-limit">/ 4096 belgi</span>
+                </div>
+                <small class="form-text">
                     {{ form.message.help_text }}
                 </small>
-                <div class="char-count">
-                    <span id="charCount">0</span> / 4096 belgi
+            </div>
+
+            <div class="preview-card" id="previewSection" style="display: none;">
+                <div class="preview-title">
+                    <span>👁️ Xabar ko'rinishi</span>
+                </div>
+                <div class="preview-content" id="previewContent">
+                    Xabar shu yerda ko'rinadi...
                 </div>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-lg" onclick="showLoading()">
-                <span id="submitText">📨 Xabarni Yuborish</span>
-                <span id="loadingSpinner" style="display:none;">⏳ Yuborilmoqda...</span>
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <div class="btn-content" id="btnText">
+                    <span>📨 Xabarni Yuborish</span>
+                </div>
+                <div class="btn-spinner" id="btnSpinner">
+                    <div class="spinner"></div>
+                    <span>Yuborilmoqda...</span>
+                </div>
             </button>
         </form>
     </div>
 </div>
 
-<style>
-.stats-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin: 20px 0;
-}
-.stat-card {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
-}
-.stat-number {
-    font-size: 24px;
-    font-weight: bold;
-    color: #007bff;
-    margin: 10px 0 0 0;
-}
-.message-form {
-    background: white;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 30px;
-    margin-top: 30px;
-}
-.form-group {
-    margin-bottom: 20px;
-}
-.form-group label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 5px;
-}
-.char-count {
-    text-align: right;
-    color: #6c757d;
-    font-size: 14px;
-    margin-top: 5px;
-}
-</style>
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Xabar yuborilmoqda...</div>
+        <p style="color: #6c757d; margin-top: 10px;">Bu biroz vaqt olishi mumkin</p>
+    </div>
+</div>
 
 <script>
-// Custom IDs guruhini ko'rsatish/yashirish
-document.getElementById('id_message_type').addEventListener('change', function() {
+document.addEventListener('DOMContentLoaded', function() {
+    const messageTypeSelect = document.getElementById('id_message_type');
     const customIdsGroup = document.getElementById('customIdsGroup');
-    customIdsGroup.style.display = this.value === 'custom' ? 'block' : 'none';
-});
+    const messageTextarea = document.getElementById('id_message');
+    const charCount = document.getElementById('charCount');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const previewSection = document.getElementById('previewSection');
+    const previewContent = document.getElementById('previewContent');
 
-// Belgilar sonini hisoblash
-document.getElementById('id_message').addEventListener('input', function() {
-    document.getElementById('charCount').textContent = this.value.length;
-});
-
-// Yuklash animatsiyasi
-function showLoading() {
-    document.getElementById('submitText').style.display = 'none';
-    document.getElementById('loadingSpinner').style.display = 'inline';
-    document.getElementById('messageForm').submit();
-}
-
-// Formani yuborishdan oldin tekshirish
-document.getElementById('messageForm').addEventListener('submit', function(e) {
-    const message = document.getElementById('id_message').value;
-    if (!message.trim()) {
-        e.preventDefault();
-        alert('Iltimos, xabar matnini kiriting!');
-        return;
+    // Custom IDs guruhini ko'rsatish/yashirish
+    function toggleCustomIdsGroup() {
+        customIdsGroup.style.display = messageTypeSelect.value === 'custom' ? 'block' : 'none';
     }
 
-    if (message.length > 4096) {
-        e.preventDefault();
-        alert('Xabar 4096 belgidan oshmasligi kerak!');
-        return;
+    messageTypeSelect.addEventListener('change', toggleCustomIdsGroup);
+    toggleCustomIdsGroup();
+
+    // Belgilar sonini hisoblash va ko'rsatish
+    function updateCharCount() {
+        const count = messageTextarea.value.length;
+        charCount.textContent = count;
+
+        // Rang o'zgarishi
+        if (count > 3800) {
+            charCount.style.color = '#f72585';
+        } else if (count > 3000) {
+            charCount.style.color = '#f8961e';
+        } else {
+            charCount.style.color = '#4361ee';
+        }
     }
+
+    messageTextarea.addEventListener('input', updateCharCount);
+    updateCharCount();
+
+    // Xabar preview
+    function updatePreview() {
+        const message = messageTextarea.value;
+        if (message.trim()) {
+            previewSection.style.display = 'block';
+            previewContent.innerHTML = message.replace(/\n/g, '<br>');
+        } else {
+            previewSection.style.display = 'none';
+        }
+    }
+
+    messageTextarea.addEventListener('input', updatePreview);
+    updatePreview();
+
+    // Formani yuborish
+    document.getElementById('messageForm').addEventListener('submit', function(e) {
+        const message = messageTextarea.value;
+
+        if (!message.trim()) {
+            e.preventDefault();
+            showAlert('Iltimos, xabar matnini kiriting!', 'error');
+            return;
+        }
+
+        if (message.length > 4096) {
+            e.preventDefault();
+            showAlert('Xabar 4096 belgidan oshmasligi kerak!', 'error');
+            return;
+        }
+
+        // Yuklash animatsiyasi
+        btnText.style.display = 'none';
+        btnSpinner.style.display = 'flex';
+        loadingOverlay.style.display = 'flex';
+        submitBtn.disabled = true;
+
+        // Avtomatik yuborish 5 soniyadan keyin
+        setTimeout(() => {
+            if (loadingOverlay.style.display === 'flex') {
+                showAlert('Xabar yuborish biroz vaqt olmoqda. Iltimos kuting...', 'info');
+            }
+        }, 5000);
+    });
+
+    // Alert funksiyasi
+    function showAlert(message, type = 'info') {
+        const alert = document.createElement('div');
+        alert.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: ${type === 'error' ? '#f72585' : type === 'success' ? '#4cc9f0' : '#4361ee'};
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+            font-weight: 500;
+        `;
+
+        alert.textContent = message;
+        document.body.appendChild(alert);
+
+        setTimeout(() => {
+            alert.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => document.body.removeChild(alert), 300);
+        }, 4000);
+    }
+
+    // Animatsiya uchun style qo'shish
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Form fieldlariga focus effekti
+    const formFields = document.querySelectorAll('select, textarea');
+    formFields.forEach(field => {
+        field.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'translateY(-2px)';
+        });
+
+        field.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'translateY(0)';
+        });
+    });
+
+    // Stat kartalari hover effekti
+    const statCards = document.querySelectorAll('.stat-card');
+    statCards.forEach(card => {
+        card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-8px) scale(1.02)';
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0) scale(1)';
+        });
+    });
 });
 </script>
 {% endblock %}
