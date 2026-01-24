@@ -1,6 +1,7 @@
-import asyncio
-import aiohttp
-from typing import List
+
+from typing import List, Dict
+import concurrent.futures
+from django.db import connection
 
 from bot_app.models import BotClient, Driver
 from configuration import env
@@ -10,203 +11,213 @@ class TelegramSender:
     def __init__(self):
         self.passenger_bot_token = env.PASSENGER_BOT_TOKEN
         self.driver_bot_token = env.DRIVER_BOT_TOKEN
+        self.base_url = "https://api.telegram.org/bot"
 
-        self.base_url = "https://api.telegram.org/bot{}"
+    def _send_single_message(self, chat_id: int, message: str,
+                             parse_mode: str = "HTML", is_driver: bool = False) -> bool:
+        """Bir dona xabarni yuborish (sync)"""
+        import requests
+        import json
 
-    def _get_bot_token(self, is_driver: bool = False) -> str:
-        """Foydalanuvchi turiga qarab bot tokenni qaytarish"""
-        return self.driver_bot_token if is_driver else self.passenger_bot_token
+        token = self.driver_bot_token if is_driver else self.passenger_bot_token
+        url = f"{self.base_url}{token}/sendMessage"
 
-    def _get_base_url(self, is_driver: bool = False) -> str:
-        """Foydalanuvchi turiga qarab base URL yaratish"""
-        token = self._get_bot_token(is_driver)
-        return f"https://api.telegram.org/bot{token}"
-
-    async def _send_message_async(self, chat_id: int, message: str,
-                                  parse_mode: str = "HTML", is_driver: bool = False) -> bool:
-        """Async tarzda xabar yuborish"""
-        async with aiohttp.ClientSession() as session:
-            url = f"{self._get_base_url(is_driver)}/sendMessage"
-            payload = {
-                'chat_id': chat_id,
-                'text': message,
-                'parse_mode': parse_mode
-            }
-
-            try:
-                async with session.post(url, json=payload, timeout=10) as response:
-                    result = await response.json()
-                    return result.get('ok', False)
-            except asyncio.TimeoutError:
-                print(f"Timeout xatosi: {chat_id} ga xabar yuborishda")
-                return False
-            except Exception as e:
-                print(f"Xatolik yuz berdi: {e}")
-                return False
-
-    def send_to_user(self, telegram_id: int, message: str, is_driver: bool = False) -> None:
-        """Bitta foydalanuvchiga xabar yuborish"""
-        try:
-            # Sync versiya - event loop bilan ishlash
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+        payload = {
+            'chat_id': chat_id,
+            'text': message,
+            'parse_mode': parse_mode,
+            'disable_web_page_preview': True
+        }
 
         try:
-            result = loop.run_until_complete(
-                self._send_message_async(telegram_id, message, is_driver=is_driver)
-            )
-            return result
-        except Exception as e:
-            print(f"Xatolik: {e}")
+            # Timeout bilan ishlash
+            response = requests.post(url, json=payload, timeout=5)
+            if response.status_code == 200:
+                result = response.json()
+                return result.get('ok', False)
             return False
-        finally:
-            if loop.is_running():
-                loop.close()
+        except Exception:
+            return False
 
-    async def send_bulk_async(self, telegram_data: List[dict], message: str) -> dict:
-        """Bir nechta foydalanuvchilarga async tarzda xabar yuborish
-
-        Args:
-            telegram_data: Har bir element {'id': int, 'is_driver': bool} formatida
-            message: Yuboriladigan xabar
-        """
+    def _send_batch_messages(self, batch_data: List[Dict], message: str,
+                             parse_mode: str = "HTML") -> Dict:
+        """Bir batch uchun xabarlarni yuborish (parallel)"""
         results = {
             'success': 0,
             'failed': 0,
             'failed_ids': []
         }
 
-        # Barcha xabarlarni parallel yuborish
-        tasks = []
-        for data in telegram_data:
-            telegram_id = data['id']
-            is_driver = data.get('is_driver', False)
-            task = self._send_message_async(telegram_id, message, is_driver=is_driver)
-            tasks.append((telegram_id, task))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            # Vazifalarni yaratish
+            future_to_id = {}
+            for data in batch_data:
+                telegram_id = data['id']
+                is_driver = data.get('is_driver', False)
+                future = executor.submit(
+                    self._send_single_message,
+                    telegram_id, message, parse_mode, is_driver
+                )
+                future_to_id[future] = telegram_id
 
-        # Natijalarni kuzatish
-        for telegram_id, task in tasks:
-            try:
-                success = await task
-                if success:
-                    results['success'] += 1
-                else:
+            # Natijalarni olish
+            for future in concurrent.futures.as_completed(future_to_id):
+                telegram_id = future_to_id[future]
+                try:
+                    success = future.result(timeout=6)
+                    if success:
+                        results['success'] += 1
+                    else:
+                        results['failed'] += 1
+                        results['failed_ids'].append(telegram_id)
+                except Exception:
                     results['failed'] += 1
                     results['failed_ids'].append(telegram_id)
-            except Exception as e:
-                results['failed'] += 1
-                results['failed_ids'].append(telegram_id)
-                print(f"Xatolik {telegram_id}: {e}")
 
         return results
 
-    def send_bulk(self, telegram_data: List[dict], message: str) -> dict:
-        """Bulk xabar yuborish (sync wrapper)"""
-        try:
-            loop = asyncio.get_event_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+    def send_bulk(self, telegram_data: List[Dict], message: str,
+                  parse_mode: str = "HTML", batch_size: int = 100) -> Dict:
+        """Bulk xabar yuborish (optimallashtirilgan)"""
+        results = {
+            'success': 0,
+            'failed': 0,
+            'failed_ids': []
+        }
 
-        try:
-            results = loop.run_until_complete(
-                self.send_bulk_async(telegram_data, message)
-            )
-            return results
-        except Exception as e:
-            print(f"Bulk xabar yuborishda xatolik: {e}")
-            return {'success': 0, 'failed': len(telegram_data), 'failed_ids': [d['id'] for d in telegram_data]}
-        finally:
-            if loop.is_running():
-                loop.close()
+        # Ma'lumotlarni batchlarga bo'lish
+        for i in range(0, len(telegram_data), batch_size):
+            batch = telegram_data[i:i + batch_size]
+            batch_results = self._send_batch_messages(batch, message, parse_mode)
 
-    def get_all_users_data(self, exclude_banned: bool = True) -> List[dict]:
-        """Barcha foydalanuvchilar uchun telegram ma'lumotlarini olish"""
-        queryset = BotClient.objects.all()
-        if exclude_banned:
-            queryset = queryset.filter(is_banned=False)
+            results['success'] += batch_results['success']
+            results['failed'] += batch_results['failed']
+            results['failed_ids'].extend(batch_results['failed_ids'])
 
+            # Har bir batchdan keyin connection ni yopish
+            connection.close()
+
+        return results
+
+    def get_all_users_data_fast(self) -> List[Dict]:
+        """Barcha foydalanuvchilar uchun telegram ma'lumotlarini tez olish"""
         users_data = []
-        for user in queryset:
-            # Agar user driver bo'lsa, driver bot orqali yuboramiz
-            is_driver = hasattr(user, 'driver') and user.driver is not None
+
+        # Barcha driver ID larni bir martada olish
+        driver_ids = set(Driver.objects.filter(telegram_id__isnull=False)
+                         .values_list('telegram_id', flat=True))
+
+        # BotClient lardan foydalanuvchilarni olish
+        users = BotClient.objects.filter(
+            is_banned=False,
+            telegram_id__isnull=False
+        ).only('telegram_id').iterator(chunk_size=1000)
+
+        for user in users:
             users_data.append({
                 'id': user.telegram_id,
-                'is_driver': is_driver
+                'is_driver': user.telegram_id in driver_ids
             })
 
         return users_data
 
-    def get_all_drivers_data(self) -> List[dict]:
-        """Barcha haydovchilar uchun telegram ma'lumotlarini olish"""
-        drivers = Driver.objects.filter(telegram_id__isnull=False)
-        return [{'id': d.telegram_id, 'is_driver': True} for d in drivers]
-
-    def send_to_all_users(self, message: str, exclude_banned: bool = True) -> dict:
-        """Barcha foydalanuvchilarga xabar yuborish (haydovchi bo'lsa driver bot orqali)"""
-        users_data = self.get_all_users_data(exclude_banned)
-        return self.send_bulk(users_data, message)
-
-    def send_to_all_drivers(self, message: str) -> dict:
-        """Barcha haydovchilarga xabar yuborish (driver bot orqali)"""
-        drivers_data = self.get_all_drivers_data()
-        return self.send_bulk(drivers_data, message)
-
-    def send_to_all_passengers(self, message: str) -> dict:
-        """Barcha yo'lovchilarga xabar yuborish (passenger bot orqali)"""
-        from bot_app.models import Passenger
-        passengers = Passenger.objects.filter(telegram_id__isnull=False)
-        passengers_data = [{'id': p.telegram_id, 'is_driver': False} for p in passengers]
-        return self.send_bulk(passengers_data, message)
-
-    def send_to_both_groups(self, message: str) -> dict:
-        """Ham haydovchilar, ham yo'lovchilarga xabar yuborish"""
-        # Haydovchilar
-        drivers_data = self.get_all_drivers_data()
-
-        # Yo'lovchilar
-        from bot_app.models import Passenger
-        passengers = Passenger.objects.filter(telegram_id__isnull=False)
-        passengers_data = [{'id': p.telegram_id, 'is_driver': False} for p in passengers]
-
-        # Barchasini birlashtirish
-        all_data = drivers_data + passengers_data
-
-        # Duplikatlarni olib tashlash
-        unique_data = []
-        seen_ids = set()
-        for data in all_data:
-            if data['id'] not in seen_ids:
-                seen_ids.add(data['id'])
-                unique_data.append(data)
-
-        return self.send_bulk(unique_data, message)
-
-    def send_to_custom_users(self, telegram_ids: List[int], message: str) -> dict:
-        """Maxsus telegram ID lariga xabar yuborish (avtomatik ravishda driver/passenger aniqlash)"""
+    def get_only_passengers_data(self) -> List[Dict]:
+        """Faqat yo'lovchilar uchun ma'lumot olish"""
         users_data = []
 
-        for telegram_id in telegram_ids:
-            # User driver ekanligini tekshirish
-            is_driver = False
-            try:
-                # BotClient orqali tekshirish
-                user = BotClient.objects.filter(telegram_id=telegram_id).first()
-                if user and hasattr(user, 'driver') and user.driver is not None:
-                    is_driver = True
-                else:
-                    # To'g'ridan-to'g'ri Driver modelida tekshirish
-                    driver = Driver.objects.filter(telegram_id=telegram_id).first()
-                    if driver:
-                        is_driver = True
-            except Exception:
-                pass
+        # Driver ID larni olish
+        driver_ids = set(Driver.objects.filter(telegram_id__isnull=False)
+                         .values_list('telegram_id', flat=True))
 
+        # Faqat yo'lovchi bo'lganlar
+        passengers = BotClient.objects.filter(
+            is_banned=False,
+            telegram_id__isnull=False
+        ).exclude(telegram_id__in=driver_ids).only('telegram_id').iterator(chunk_size=1000)
+
+        for passenger in passengers:
             users_data.append({
-                'id': telegram_id,
-                'is_driver': is_driver
+                'id': passenger.telegram_id,
+                'is_driver': False
             })
 
-        return self.send_bulk(users_data, message)
+        return users_data
+
+    def get_only_drivers_data(self) -> List[Dict]:
+        """Faqat haydovchilar uchun ma'lumot olish"""
+        drivers_data = []
+
+        drivers = Driver.objects.filter(
+            telegram_id__isnull=False
+        ).only('telegram_id').iterator(chunk_size=1000)
+
+        for driver in drivers:
+            drivers_data.append({
+                'id': driver.telegram_id,
+                'is_driver': True
+            })
+
+        return drivers_data
+
+    def get_banned_users_data(self) -> List[Dict]:
+        """Bloklangan foydalanuvchilar uchun ma'lumot olish"""
+        users_data = []
+
+        banned_users = BotClient.objects.filter(
+            is_banned=True,
+            telegram_id__isnull=False
+        ).only('telegram_id').iterator(chunk_size=1000)
+
+        # Driver ID larni olish
+        driver_ids = set(Driver.objects.filter(telegram_id__isnull=False)
+                         .values_list('telegram_id', flat=True))
+
+        for user in banned_users:
+            users_data.append({
+                'id': user.telegram_id,
+                'is_driver': user.telegram_id in driver_ids
+            })
+
+        return users_data
+
+    def get_custom_users_data(self, telegram_ids: List[int]) -> List[Dict]:
+        """Custom ID lar uchun ma'lumot olish"""
+        if not telegram_ids:
+            return []
+
+        users_data = []
+
+        # Driver ID larni olish
+        driver_ids = set(Driver.objects.filter(telegram_id__isnull=False)
+                         .values_list('telegram_id', flat=True))
+
+        for telegram_id in telegram_ids:
+            users_data.append({
+                'id': telegram_id,
+                'is_driver': telegram_id in driver_ids
+            })
+
+        return users_data
+
+    def send_message_by_type(self, message_type: str, message: str,
+                             parse_mode: str = "HTML", custom_ids: List[int] = None) -> Dict:
+        """Xabar turi bo'yicha yuborish"""
+        # Ma'lumotlarni olish
+        if message_type == 'all':
+            telegram_data = self.get_all_users_data_fast()
+        elif message_type == 'users':
+            telegram_data = self.get_only_passengers_data()
+        elif message_type == 'drivers':
+            telegram_data = self.get_only_drivers_data()
+        elif message_type == 'banned':
+            telegram_data = self.get_banned_users_data()
+        elif message_type == 'custom' and custom_ids:
+            telegram_data = self.get_custom_users_data(custom_ids)
+        else:
+            return {'success': 0, 'failed': 0, 'failed_ids': []}
+
+        # Xabarni yuborish
+        if telegram_data:
+            return self.send_bulk(telegram_data, message, parse_mode)
+        else:
+            return {'success': 0, 'failed': 0, 'failed_ids': []}

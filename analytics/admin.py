@@ -3,13 +3,13 @@ from django.shortcuts import render
 from django.urls import path
 from django.contrib import messages
 from django.http import HttpResponseRedirect
+import threading
+from django.core.cache import cache
 
 from analytics.forms import MassMessageForm
 from analytics.telegram_sender import TelegramSender
-from bot_app.models import Passenger
 
 
-# CustomAdminSite ni yaratish
 class CustomAdminSite(admin.AdminSite):
     site_header = "Taxi Bot Admin"
     site_title = "Taxi Bot Administration"
@@ -22,99 +22,122 @@ class CustomAdminSite(admin.AdminSite):
         ]
         return custom_urls + urls
 
+    def _send_message_in_background(self, message_type, message, parse_mode, custom_ids):
+        """Xabarni background thread da yuborish"""
+        try:
+            sender = TelegramSender()
+            results = sender.send_message_by_type(
+                message_type, message, parse_mode, custom_ids
+            )
+
+            # Natijani cache ga saqlash (1 soat davomida)
+            cache_key = f"message_result_{threading.current_thread().ident}"
+            cache.set(cache_key, {
+                'success': results.get('success', 0),
+                'failed': results.get('failed', 0),
+                'total': results.get('success', 0) + results.get('failed', 0)
+            }, 3600)
+
+        except Exception as e:
+            print(f"Background xatolik: {e}")
+
     def send_message_view(self, request):
-        """Xabar yuborish sahifasi"""
+        """Xabar yuborish sahifasi (optimallashtirilgan)"""
+        # Statistikani cache dan olish
+        cache_key_stats = "user_stats"
+        stats = cache.get(cache_key_stats)
+
+        if not stats:
+            try:
+                from bot_app.models import BotClient, Driver
+                total_drivers = Driver.objects.count()
+                total_passengers = BotClient.objects.filter(is_banned=False).count()
+                total_banned = BotClient.objects.filter(is_banned=True).count()
+
+                stats = {
+                    'total_drivers': total_drivers,
+                    'total_passengers': total_passengers,
+                    'total_banned': total_banned,
+                    'total_users': total_drivers + total_passengers
+                }
+                cache.set(cache_key_stats, stats, 300)  # 5 minut cache
+            except:
+                stats = {
+                    'total_drivers': 0,
+                    'total_passengers': 0,
+                    'total_banned': 0,
+                    'total_users': 0
+                }
+
         if request.method == 'POST':
             form = MassMessageForm(request.POST)
             if form.is_valid():
-                sender = TelegramSender()
                 message_type = form.cleaned_data['message_type']
                 message = form.cleaned_data['message']
+                parse_mode = form.cleaned_data['parse_mode']
+                custom_ids = form.cleaned_data.get('custom_ids', [])
 
-                results = {}
+                # Background thread da yuborish
+                thread = threading.Thread(
+                    target=self._send_message_in_background,
+                    args=(message_type, message, parse_mode, custom_ids)
+                )
+                thread.daemon = True
+                thread.start()
 
-                if message_type == 'all':
-                    # Hammaga - haydovchi ham, yo'lovchi ham
-                    results = sender.send_to_both_groups(message)
-                elif message_type == 'users':
-                    # Barcha userlarga (driver bo'lsa driver bot orqali)
-                    results = sender.send_to_all_users(message)
-                elif message_type == 'drivers':
-                    # Faqat haydovchilarga
-                    results = sender.send_to_all_drivers(message)
-                elif message_type == 'passengers':
-                    # Faqat yo'lovchilarga
-                    results = sender.send_to_all_passengers(message)
-                elif message_type == 'banned':
-                    from bot_app.models import BotClient
-                    banned_users = BotClient.objects.filter(is_banned=True)
-                    telegram_ids = list(banned_users.values_list('telegram_id', flat=True))
-                    results = sender.send_to_custom_users(telegram_ids, message)
-                elif message_type == 'custom':
-                    telegram_ids = form.cleaned_data['custom_ids']
-                    if telegram_ids:
-                        results = sender.send_to_custom_users(telegram_ids, message)
+                messages.info(
+                    request,
+                    f"✅ Xabar yuborish jarayoni boshlandi! "
+                    f"{'Barcha foydalanuvchilar' if message_type == 'all' else ''}"
+                    f"{'Yo\'lovchilar' if message_type == 'users' else ''}"
+                    f"{'Haydovchilar' if message_type == 'drivers' else ''}"
+                    f"{'Bloklanganlar' if message_type == 'banned' else ''}"
+                    f"{'Maxsus ro\'yxat' if message_type == 'custom' else ''}"
+                    f" ga xabar yuborilmoqda..."
+                )
 
-                # Natijani ko'rsatish
-                if results.get('success', 0) > 0:
-                    messages.success(
-                        request,
-                        f"✅ {results['success']} ta foydalanuvchiga xabar muvaffaqiyatli yuborildi!"
-                    )
-
-                if results.get('failed', 0) > 0:
-                    failed_ids = results.get('failed_ids', [])[:10]
-                    messages.warning(
-                        request,
-                        f"⚠️ {results['failed']} ta foydalanuvchiga xabar yuborilmadi. "
-                        f"Xatolik yuz bergan ID lar: {failed_ids}"
-                    )
-
-                return HttpResponseRedirect('/dashboard')
+                return HttpResponseRedirect('/dashboard/send-message/?status=processing')
 
         else:
             form = MassMessageForm()
 
-            # URL dan telegram_ids parameterini olish
+            # URL dan parameterlarni olish
             telegram_ids = request.GET.get('ids', '')
             message_type = request.GET.get('message_type', '')
 
             if telegram_ids:
                 form = MassMessageForm(initial={
                     'message_type': 'custom' if message_type else 'all',
-                    'custom_ids': telegram_ids
+                    'custom_ids': ','.join(str(id) for id in telegram_ids.split(','))
                 })
 
-        # Statistika uchun
-        try:
-            from bot_app.models import Driver
-            total_drivers = Driver.objects.count()
-            total_passengers = Passenger.objects.count()
-            total_users = total_drivers + total_passengers
-        except:
-            total_users = 0
-            total_drivers = 0
-            total_passengers = 0
+            # Jarayon holatini tekshirish
+            status = request.GET.get('status', '')
+            if status == 'processing':
+                messages.info(request, "📤 Xabar yuborish jarayoni davom etmoqda...")
 
         context = self.each_context(request)
         context.update({
             'title': 'Telegram Xabar Yuborish',
             'form': form,
-            'total_users': total_users,
-            'total_drivers': total_drivers,
-            'total_passengers': total_passengers,
+            'total_users': stats['total_users'],
+            'total_drivers': stats['total_drivers'],
+            'total_passengers': stats['total_passengers'],
+            'total_banned': stats['total_banned'],
             'opts': self._build_fake_model_options(),
         })
 
         return render(request, 'admin/send_message.html', context)
 
     def _build_fake_model_options(self):
-        """Admin template lar uchun model options yaratish"""
+        """Admin template lar uchun model options"""
+
         class FakeMeta:
             app_label = 'analytics'
             model_name = 'send_message'
             verbose_name = 'Xabar Yuborish'
             verbose_name_plural = 'Xabar Yuborish'
+
 
         class FakeModel:
             _meta = FakeMeta()
@@ -122,29 +145,21 @@ class CustomAdminSite(admin.AdminSite):
         return FakeModel()._meta
 
     def get_app_list(self, request, app_label=None):
-        """
-        Admin panelda faqat "Send Telegram Message" bo'limini ko'rsatish
-        """
+        """Admin panelda xabar yuborish bo'limini ko'rsatish"""
         app_list = super().get_app_list(request, app_label)
 
-        # Faqat "Send Telegram Message" ni ko'rsatish
         custom_app = {
-            'name': 'Telegram Xabarlar',
+            'name': '📢 Xabar Yuborish',
             'app_label': 'telegram_messages',
             'app_url': '/dashboard/send-message/',
             'has_module_perms': True,
             'models': [
                 {
-                    'name': 'Xabar Yuborish',
+                    'name': 'Yangi xabar yuborish',
                     'object_name': 'sendmessage',
                     'admin_url': '/dashboard/send-message/',
                     'view_only': False,
-                    'perms': {
-                        'add': True,
-                        'change': True,
-                        'delete': True,
-                        'view': True
-                    },
+                    'perms': {'add': True, 'change': True, 'delete': True, 'view': True},
                     'model_name': 'sendmessage',
                     'verbose_name': 'Xabar Yuborish',
                     'verbose_name_plural': 'Xabar Yuborish',
