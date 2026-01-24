@@ -34,6 +34,8 @@ class EventSettings(BaseSettings):
     MAIN_BOT: str = None
 
     DRIVER_BOT_USERNAME: str = "https://t.me/Gozzdriverbot"
+    PASSENGER_BOT_TOKEN: str = None
+    DRIVER_BOT_TOKEN: str = None
 
     ENCRYPTION_KEY: Optional[str] = None
 

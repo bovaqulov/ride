@@ -8,8 +8,6 @@ from analytics.forms import MassMessageForm
 from analytics.telegram_sender import TelegramSender
 from bot_app.models import Passenger
 
-
-# CustomAdminSite ni yaratish
 class CustomAdminSite(admin.AdminSite):
     site_header = "Taxi Bot Admin"
     site_title = "Taxi Bot Administration"
@@ -34,7 +32,7 @@ class CustomAdminSite(admin.AdminSite):
                 results = {}
 
                 if message_type == 'all':
-                    results = sender.send_to_all_users(message)
+                    results = sender.send_to_everyone(message)
                 elif message_type == 'users':
                     results = sender.send_to_all_users(message)
                 elif message_type == 'drivers':
