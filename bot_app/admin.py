@@ -186,7 +186,7 @@ class DriverAdmin(admin.ModelAdmin):
     list_editable = ("amount", "status", "route_id")
 
     list_filter = ("phone", "status", "route_id")  # Optional: add route_id to filters
-    search_fields = ("telegram_id", "phone", "route_id__name")  # Optional: search by route name
+    search_fields = ("telegram_id", "phone", )  # Optional: search by route name
 
     inlines = [DriverGalleryInline, CarInline, DriverTransactionInline]
     readonly_fields = ("created_at", "updated_at")
