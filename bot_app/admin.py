@@ -1,5 +1,6 @@
 
 from django.contrib import admin
+from django.utils import timezone
 from django.utils.safestring import mark_safe
 
 from .models import (
@@ -159,55 +160,100 @@ class PassengerPostAdmin(admin.ModelAdmin):
         }),
     )
 
+class CarInline(admin.TabularInline):
+    model = Car
+    extra = 1
+    readonly_fields = ("created_at", "updated_at")
+    fields = ('car_number', 'car_model', 'car_color', 'tariff', 'created_at', 'updated_at')
+
+
+class DriverTransactionInline(admin.TabularInline):
+    model = DriverTransaction
+    extra = 1
+    readonly_fields = ("created_at",)
+
+
+class DriverGalleryInline(admin.StackedInline):
+    model = DriverGallery
+    can_delete = False
+    extra = 0
+    max_num = 1
+
+
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
-    class CarInline(admin.TabularInline):
-        model = Car
-        extra = 1
-        readonly_fields = ("created_at", "updated_at")
-        # Make tariff editable in inline
-        fields = ('car_number', 'car_model', 'car_color', 'tariff', 'created_at', 'updated_at')
+    fieldsets = (
+        ("Asosiy ma'lumotlar", {
+            "fields": ("telegram_id", "full_name", "phone", "rating", "last_online_at")
+        }),
+        ("Holat va joylashuv", {
+            "fields": ("status", "amount", "route_id", "from_location", "to_location")
+        }),
+        ("Vaqtlar", {
+            "fields": ("created_at", "updated_at")
+        }),
+    )
 
-    class DriverTransactionInline(admin.TabularInline):
-        model = DriverTransaction
-        extra = 1
-        readonly_fields = ("created_at",)
-
-    class DriverGalleryInline(admin.StackedInline):
-        """DriverGallery modelini Driver adminida inline ko'rinishda ko'rsatish"""
-        model = DriverGallery
-        can_delete = False
-        extra = 0
-        max_num = 1
-    # Add 'route_id' to list_display to make it visible
-    list_display = ("new_full_name", "car_info", "phone", "status", "route_id", "amount",)
-
-    # Add 'route_id' to list_editable to make it editable
-    list_editable = ("amount", "status", "route_id")
-
-    list_filter = ("phone", "status", "route_id")  # Optional: add route_id to filters
-    search_fields = ("telegram_id", "phone", )  # Optional: search by route name
-
-    inlines = [DriverGalleryInline, CarInline, DriverTransactionInline]
     readonly_fields = ("created_at", "updated_at")
+
+    list_display = (
+        "new_full_name",
+        "car_info",
+        "phone",
+        "status",
+        "route_id",
+        "amount",
+    )
+    list_editable = ("amount", "status", "route_id")
+    list_filter = ("status", "route_id", "from_location", "to_location")
+    search_fields = ("telegram_id", "phone", "full_name")
+    inlines = (DriverGalleryInline, CarInline, DriverTransactionInline)
     ordering = ("-created_at",)
 
+    def save_model(self, request, obj, form, change):
+        # Yangi driver yaratilganda last_online_at ni to'ldirish
+        if not change:
+            obj.last_online_at = timezone.now()
+        super().save_model(request, obj, form, change)
+
     def new_full_name(self, obj):
-        return f"{obj.full_name}({obj.telegram_id})"
+        return f"{obj.full_name} ({obj.telegram_id})"
 
     new_full_name.short_description = "Ism"
 
     def car_info(self, obj):
         try:
-            cars = Car.objects.filter(driver_id=obj.id).first()
-            if cars:
-                tariff_info = f" ({cars.tariff})" if cars.tariff else ""
-                return mark_safe(f"<b>{cars.car_model}({cars.car_number}){tariff_info}</b>")
-        except Exception as e:
-            print(e)
+            # Car modelidagi driver ForeignKey nomi 'driver' deb qoldi
+            car = Car.objects.filter(driver=obj).first()
+            if car:
+                tariff_info = f" ({car.tariff})" if car.tariff else ""
+                return mark_safe(f"<b>{car.car_model} ({car.car_number}){tariff_info}</b>")
+        except Exception:
+            return ""
         return ""
 
-    car_info.short_description = mark_safe("<b>Avtomobil ma'lumotlari</b>")
+    car_info.short_description = mark_safe("<b>Avtomobil</b>")
+
+    def formatted_last_online(self, obj):
+        if obj.last_online_at:
+            dt = obj.last_online_at
+            if timezone.is_aware(dt):
+                dt = timezone.localtime(dt)
+            return dt.strftime("%Y-%m-%d %H:%M")
+        return "N/A"
+
+    formatted_last_online.short_description = "Online vaqti"
+    formatted_last_online.admin_order_field = "last_online_at"
+
+    # Custom action: tanlangan driverlarning last_online_at ni yangilash
+    actions = ['update_last_online_to_now']
+
+    def update_last_online_to_now(self, request, queryset):
+        updated_count = queryset.update(last_online_at=timezone.now())
+        self.message_user(request, f"{updated_count} ta driverning online vaqti yangilandi.")
+
+    update_last_online_to_now.short_description = "Online vaqtini hozirgi vaqtga yangilash"
+
 
 @admin.register(City)
 class CityAdmin(admin.ModelAdmin):

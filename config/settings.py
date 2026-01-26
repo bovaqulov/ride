@@ -37,6 +37,7 @@ THIRD_PARTY_APPS = [
     'rest_framework.authtoken',
     'django_filters',
     'drf_yasg',
+    'django_crontab'
 ]
 
 # django default apps

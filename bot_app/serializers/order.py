@@ -282,15 +282,10 @@ class PassengerRejectCreateSerializer(serializers.ModelSerializer):
         source="order",
         write_only=True
     )
-    passenger_id = serializers.PrimaryKeyRelatedField(
-        queryset=Passenger.objects.all(),
-        source="passenger",
-        write_only=True
-    )
 
     class Meta:
         model = PassengerReject
-        fields = ["order_id", "passenger_id", "comment"]
+        fields = ["order_id", "comment"]
 
 class PassengerToDriverReviewCreateSerializer(serializers.ModelSerializer):
     order_id = serializers.PrimaryKeyRelatedField(

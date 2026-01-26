@@ -4,6 +4,7 @@ from typing import Optional
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.utils import timezone
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -146,6 +147,10 @@ class Driver(models.Model):
     status = models.CharField(max_length=10, choices=DriverStatus.choices, default=DriverStatus.OFFLINE,
                               verbose_name="Haydovchi xolati")
     amount = models.IntegerField(default=150000, verbose_name="Haydovchi mablag'i")
+    last_online_at = models.DateTimeField(
+        default=timezone.now,  # ✅ auto_now=True o'rniga
+        verbose_name="Online bo'lgan vaqt"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -379,18 +384,5 @@ class PassengerReject(Reject):
 
     def __str__(self):
         return f"{self.passenger}"
-
-
-class Categories(models.Model):
-    name = models.CharField(unique=True)
-    description = models.CharField(blank=True, null=True)
-    order = models.IntegerField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'categories'
-
-    def __str__(self):
-        return self.name
 
 
