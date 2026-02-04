@@ -3,641 +3,839 @@
 
 {% block extrastyle %}
 <style>
-:root {
-    --primary-color: #4361ee;
-    --primary-light: #4895ef;
-    --secondary-color: #3a0ca3;
-    --success-color: #4cc9f0;
-    --danger-color: #f72585;
-    --warning-color: #f8961e;
-    --dark-color: #2b2d42;
-    --light-color: #f8f9fa;
-    --border-radius: 12px;
-    --box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-    --transition: all 0.3s ease;
-}
-
-body {
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-    min-height: 100vh;
-}
-
-#content-main {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.page-header {
-    text-align: center;
-    margin-bottom: 40px;
-    position: relative;
-}
-
-.page-header h1 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    display: inline-block;
-    position: relative;
-    padding-bottom: 15px;
-}
-
-.page-header h1::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100px;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
-    border-radius: 2px;
-}
-
-.stats-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 25px;
-    margin: 40px 0;
-}
-
-.stat-card {
-    background: white;
-    border-radius: var(--border-radius);
-    padding: 25px;
-    text-align: center;
-    box-shadow: var(--box-shadow);
-    transition: var(--transition);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    position: relative;
-    overflow: hidden;
-}
-
-.stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-}
-
-.stat-card:nth-child(1) .stat-icon { color: var(--primary-color); }
-.stat-card:nth-child(2) .stat-icon { color: var(--success-color); }
-.stat-card:nth-child(3) .stat-icon { color: var(--warning-color); }
-.stat-card:nth-child(4) .stat-icon { color: var(--danger-color); }
-
-.stat-icon {
-    font-size: 2.5rem;
-    margin-bottom: 15px;
-    display: block;
-}
-
-.stat-card h3 {
-    font-size: 1rem;
-    color: var(--dark-color);
-    margin: 0 0 10px 0;
-    font-weight: 600;
-    opacity: 0.8;
-}
-
-.stat-number {
-    font-size: 2.2rem;
-    font-weight: 800;
-    color: var(--dark-color);
-    margin: 0;
-}
-
-.message-form-container {
-    background: white;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-    padding: 40px;
-    margin-top: 30px;
-    position: relative;
-    overflow: hidden;
-}
-
-.message-form-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 5px;
-    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
-}
-
-.form-section-title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--dark-color);
-    margin-bottom: 25px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--light-color);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.form-section-title::before {
-    content: '';
-    width: 20px;
-    height: 20px;
-    background: var(--primary-color);
-    border-radius: 50%;
-    display: inline-block;
-}
-
-.form-group {
-    margin-bottom: 30px;
-}
-
-.form-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--dark-color);
-    font-size: 1.1rem;
-}
-
-select, textarea {
-    width: 100%;
-    padding: 14px 18px;
-    border: 2px solid #e1e5eb;
-    border-radius: 10px;
-    font-size: 1rem;
-    transition: var(--transition);
-    background: white;
-}
-
-select:focus, textarea:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
-}
-
-textarea {
-    min-height: 200px;
-    resize: vertical;
-    line-height: 1.6;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-.form-text {
-    color: #6c757d;
-    font-size: 0.9rem;
-    margin-top: 6px;
-}
-
-.char-counter {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-    font-size: 0.9rem;
-}
-
-.char-count {
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-.char-limit {
-    color: #6c757d;
-}
-
-.submit-btn {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-    color: white;
-    border: none;
-    padding: 16px 40px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: var(--transition);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin: 40px auto 0;
-    min-width: 200px;
-}
-
-.submit-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(67, 97, 238, 0.3);
-}
-
-.submit-btn:active {
-    transform: translateY(0);
-}
-
-.btn-content {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.btn-spinner {
-    display: none;
-    align-items: center;
-    gap: 10px;
-}
-
-.btn-spinner .spinner {
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: white;
-    animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-.preview-card {
-    background: var(--light-color);
-    border-radius: 10px;
-    padding: 25px;
-    margin-top: 30px;
-    border-left: 4px solid var(--primary-color);
-}
-
-.preview-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--dark-color);
-    margin-bottom: 15px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.preview-content {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    border: 1px solid #e1e5eb;
-    min-height: 100px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    line-height: 1.6;
-}
-
-@media (max-width: 768px) {
-    .stats-container {
-        grid-template-columns: 1fr;
+    :root {
+        --primary-color: #4361ee;
+        --primary-dark: #3651d4;
+        --secondary-color: #6c757d;
+        --light-bg: #f8f9fa;
+        --border-color: #e1e5eb;
+        --success-color: #198754;
+        --error-color: #dc3545;
+        --warning-color: #ffc107;
+        --info-color: #0dcaf0;
     }
 
-    .message-form-container {
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    #content {
+        padding: 40px 20px;
+        max-width: 950px;
+        margin: 0 auto;
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 40px;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 40px 30px;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+    }
+
+    .header h1 {
+        color: var(--primary-color);
+        font-size: 2.2rem;
+        margin-bottom: 8px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+    }
+
+    .header p {
+        color: var(--secondary-color);
+        font-size: 1.05rem;
+        margin: 0;
+        font-weight: 500;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+        perspective: 1000px;
+    }
+
+    .stat-box {
+        background: white;
         padding: 25px;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        border: 2px solid transparent;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: default;
+        position: relative;
+        overflow: hidden;
     }
 
-    .page-header h1 {
+    .stat-box::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary-color), var(--info-color));
+    }
+
+    .stat-box:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 25px rgba(67, 97, 238, 0.15);
+        border-color: var(--primary-color);
+    }
+
+    .stat-number {
+        font-size: 2.2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 10px 0;
+    }
+
+    .stat-label {
+        font-size: 0.95rem;
+        color: var(--secondary-color);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-container {
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        margin-top: 30px;
+    }
+
+    .form-section {
+        margin-bottom: 35px;
+        padding-bottom: 30px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-section:last-of-type {
+        border-bottom: none;
+        margin-bottom: 30px;
+        padding-bottom: 0;
+    }
+
+    .form-section h3 {
+        color: var(--primary-color);
+        font-size: 1.25rem;
+        margin-bottom: 20px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-section h3::before {
+        content: '';
+        width: 4px;
+        height: 24px;
+        background: linear-gradient(180deg, var(--primary-color), var(--primary-dark));
+        border-radius: 2px;
+    }
+
+    .form-group {
+        margin-bottom: 22px;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #2c3e50;
+        font-size: 1rem;
+    }
+
+    select, textarea, input[type="text"], input[type="file"] {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        background: white;
+        transition: all 0.3s ease;
+        font-family: inherit;
+    }
+
+    select:hover, textarea:hover, input:hover {
+        border-color: var(--primary-color);
+        background: #fafbfc;
+    }
+
+    select:focus, textarea:focus, input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15), inset 0 0 0 1px var(--primary-color);
+    }
+
+    textarea {
+        min-height: 150px;
+        resize: vertical;
+        line-height: 1.6;
+    }
+
+    .help-text {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 8px;
+        font-style: italic;
+    }
+
+    .char-counter {
+        text-align: right;
+        font-size: 0.85rem;
+        color: var(--secondary-color);
+        margin-top: 8px;
+        font-weight: 600;
+    }
+
+    .char-counter.warning {
+        color: var(--warning-color);
+    }
+
+    .char-counter.error {
+        color: var(--error-color);
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: white;
+        border: none;
+        padding: 16px 40px;
+        font-size: 1.05rem;
+        border-radius: 8px;
+        cursor: pointer;
+        width: 100%;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        text-transform: uppercase;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4);
+    }
+
+    .submit-btn:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    .submit-btn:disabled {
+        background: #d3d3d3;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        vertical-align: middle;
+        margin-right: 10px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .custom-ids-group {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        padding: 20px;
+        border-radius: 8px;
+        margin-top: 12px;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .custom-ids-group label {
+        margin-bottom: 10px;
+    }
+
+    .result-box {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin-top: 30px;
+        border-left: 6px solid var(--primary-color);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        animation: slideInUp 0.4s ease;
+    }
+
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .result-box.success {
+        border-left-color: var(--success-color);
+        background: linear-gradient(135deg, #f0fdf4, #f1fde8);
+    }
+
+    .result-box.error {
+        border-left-color: var(--error-color);
+        background: linear-gradient(135deg, #fef2f2, #ffe8e8);
+    }
+
+    .result-box.processing {
+        border-left-color: var(--warning-color);
+        background: linear-gradient(135deg, #fffbf0, #ffe8d6);
+    }
+
+    .result-title {
+        font-weight: 700;
+        font-size: 1.15rem;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .result-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 20px;
+    }
+
+    .result-item {
+        text-align: center;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 8px;
+    }
+
+    .result-number {
         font-size: 2rem;
+        font-weight: 800;
+        margin: 8px 0;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
-}
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-    width: 8px;
-}
+    .result-label {
+        font-size: 0.9rem;
+        color: #666;
+        font-weight: 600;
+    }
 
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
+    input[type="file"]::file-selector-button {
+        padding: 8px 16px;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
 
-::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, var(--primary-color), var(--success-color));
-    border-radius: 10px;
-}
+    input[type="file"]::file-selector-button:hover {
+        background: var(--primary-dark);
+    }
 
-::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-color);
-}
+    .send-preview {
+        background: linear-gradient(135deg, #e7f3ff, #f0e7ff);
+        border: 2px solid var(--primary-color);
+        border-radius: 12px;
+        padding: 20px;
+        margin: 20px 0;
+        display: none;
+        animation: slideInDown 0.3s ease;
+    }
 
-/* Form elements styling */
-#id_message_type, #id_parse_mode {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%234361ee' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 16px;
-    padding-right: 3rem;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-}
+    .send-preview.show {
+        display: block;
+    }
 
-/* Loading overlay */
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.9);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    backdrop-filter: blur(5px);
-}
+    @keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 
-.loading-content {
-    text-align: center;
-    background: white;
-    padding: 40px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
-}
+    .preview-title {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--primary-color);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
 
-.loading-spinner {
-    width: 60px;
-    height: 60px;
-    border: 5px solid var(--light-color);
-    border-top-color: var(--primary-color);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 20px;
-}
+    .preview-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+    }
 
-.loading-text {
-    font-size: 1.2rem;
-    color: var(--dark-color);
-    font-weight: 600;
-}
+    .preview-item {
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        border-left: 4px solid var(--primary-color);
+        font-size: 0.95rem;
+    }
+
+    .preview-label {
+        font-weight: 600;
+        color: #555;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+
+    .preview-value {
+        color: var(--primary-color);
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .confirm-button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .confirm-btn, .cancel-btn {
+        flex: 1;
+        padding: 12px 20px;
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .confirm-btn {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .confirm-btn:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+    }
+
+    .cancel-btn {
+        background: white;
+        color: var(--primary-color);
+    }
+
+    .cancel-btn:hover {
+        background: #f0f0f0;
+    }
+
+
+    @media (max-width: 768px) {
+        #content {
+            padding: 20px 15px;
+        }
+
+        .header {
+            padding: 30px 20px;
+        }
+
+        .header h1 {
+            font-size: 1.7rem;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .form-container {
+            padding: 25px;
+        }
+
+        .result-content {
+            grid-template-columns: 1fr;
+        }
+
+        .stat-box {
+            padding: 20px 15px;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+        }
+
+        .submit-btn {
+            font-size: 0.95rem;
+            padding: 14px 30px;
+        }
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div id="content-main">
-    <div class="page-header">
+<div id="content">
+    <div class="header">
         <h1>📨 Telegram Xabar Yuborish</h1>
-        <p class="page-subtitle">Foydalanuvchilarga ommaviy xabar yuborish paneli</p>
+        <p>Barcha foydalanuvchilarga xabar yuborish</p>
     </div>
 
-    <div class="stats-container">
-        <div class="stat-card">
-            <span class="stat-icon">👥</span>
-            <h3>Jami Foydalanuvchilar</h3>
-            <p class="stat-number">{{ total_users }}</p>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="stat-number">{{ total_users }}</div>
+            <div class="stat-label">Jami Foydalanuvchilar</div>
         </div>
-        <div class="stat-card">
-            <span class="stat-icon">🚖</span>
-            <h3>Haydovchilar</h3>
-            <p class="stat-number">{{ total_drivers }}</p>
+        <div class="stat-box">
+            <div class="stat-number">{{ total_drivers }}</div>
+            <div class="stat-label">Haydovchilar</div>
         </div>
-        <div class="stat-card">
-            <span class="stat-icon">👤</span>
-            <h3>Yo'lovchilar</h3>
-            <p class="stat-number">{{ total_passengers }}</p>
+        <div class="stat-box">
+            <div class="stat-number">{{ total_passengers }}</div>
+            <div class="stat-label">Yo'lovchilar</div>
         </div>
-        <div class="stat-card">
-            <span class="stat-icon">🚫</span>
-            <h3>Bloklanganlar</h3>
-            <p class="stat-number">{{ total_banned }}</p>
+        <div class="stat-box">
+            <div class="stat-number">{{ total_banned }}</div>
+            <div class="stat-label">Bloklanganlar</div>
         </div>
     </div>
 
-    <div class="message-form-container">
-        <form method="post" id="messageForm">
+    {% if message_result %}
+        {% if message_result.status == 'completed' %}
+            <div class="result-box success">
+                <div class="result-title">✅ Xabar jo'natish muvaffaqiyatli yakunlandi</div>
+                <div class="result-content">
+                    <div class="result-item">
+                        <div class="result-label">Jo'natilgan</div>
+                        <div class="result-number" style="color: var(--success-color);">{{ message_result.success }}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Xato</div>
+                        <div class="result-number" style="color: var(--error-color);">{{ message_result.failed }}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Blok/Fake</div>
+                        <div class="result-number" style="color: #ff9800;">{{ message_result.blocked }}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Jami</div>
+                        <div class="result-number">{{ message_result.total }}</div>
+                    </div>
+                </div>
+            </div>
+        {% elif message_result.status == 'error' %}
+            <div class="result-box error">
+                <div class="result-title">❌ Xatolik yuz berdi</div>
+                <p style="color: var(--error-color);">{{ message_result.error }}</p>
+            </div>
+        {% elif message_result.status == 'processing' %}
+            <div class="result-box processing">
+                <div class="result-title">⏳ Xabar jo'natilmoqda...</div>
+                <div id="processingInfo" style="margin-top: 15px;">
+                    <p style="margin: 10px 0; font-weight: 600; color: #333;">
+                        📍 <strong id="recipientInfo"></strong>
+                    </p>
+                    <p style="margin: 10px 0; color: #666; font-size: 0.95rem;">
+                        Iltimos, vaqt soting. Xabarlar jo'natilmoqda...
+                    </p>
+                    <div style="margin-top: 15px;">
+                        <div style="background: rgba(255,255,255,0.7); padding: 10px; border-radius: 6px; border-left: 3px solid var(--warning-color);">
+                            <span id="processingDetails" style="font-size: 0.9rem; color: #555;"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <div class="form-container">
+        <form method="post" id="messageForm" enctype="multipart/form-data">
             {% csrf_token %}
 
-            <div class="form-section-title">
-                <span>🎯 Xabar yuborish parametrlari</span>
-            </div>
-
-            <div class="form-group">
-                <label for="id_message_type">{{ form.message_type.label }}</label>
-                {{ form.message_type }}
-                <small class="form-text">
-                    Kimga xabar yubormoqchisiz?
-                </small>
-            </div>
-
-            <div class="form-group" id="customIdsGroup" style="display: none;">
-                <label for="id_custom_ids">{{ form.custom_ids.label }}</label>
-                {{ form.custom_ids }}
-                <small class="form-text">
-                    {{ form.custom_ids.help_text }}
-                </small>
-            </div>
-
-            <div class="form-group">
-                <label for="id_parse_mode">{{ form.parse_mode.label }}</label>
-                {{ form.parse_mode }}
-                <small class="form-text">
-                    Xabar formatlash turini tanlang
-                </small>
-            </div>
-
-            <div class="form-section-title">
-                <span>📝 Xabar matni</span>
-            </div>
-
-            <div class="form-group">
-                <label for="id_message">{{ form.message.label }}</label>
-                {{ form.message }}
-                <div class="char-counter">
-                    <span class="char-count" id="charCount">0</span>
-                    <span class="char-limit">/ 4096 belgi</span>
+            <div id="sendPreview" class="send-preview">
+                <div class="preview-title">📋 Xabar jo'natish ma'lumotlari</div>
+                <div class="preview-items">
+                    <div class="preview-item">
+                        <div class="preview-label">👥 Poydalanuvchilar</div>
+                        <div class="preview-value" id="previewRecipients">-</div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-label">📝 Xabar turi</div>
+                        <div class="preview-value" id="previewMediaType">Matn</div>
+                    </div>
+                    <div class="preview-item">
+                        <div class="preview-label">🔤 Format</div>
+                        <div class="preview-value" id="previewFormat">-</div>
+                    </div>
                 </div>
-                <small class="form-text">
-                    {{ form.message.help_text }}
-                </small>
+                <div class="confirm-button-group">
+                    <button type="button" class="confirm-btn" id="confirmBtn">✅ Xabarni Yuborish</button>
+                    <button type="button" class="cancel-btn" id="cancelBtn">❌ Bekor qilish</button>
+                </div>
             </div>
 
-            <div class="preview-card" id="previewSection" style="display: none;">
-                <div class="preview-title">
-                    <span>👁️ Xabar ko'rinishi</span>
+            <div class="form-section">
+                <h3>Kimga yuborilsin?</h3>
+                <div class="form-group">
+                    <label for="id_message_type">{{ form.message_type.label }}</label>
+                    {{ form.message_type }}
                 </div>
-                <div class="preview-content" id="previewContent">
-                    Xabar shu yerda ko'rinadi...
+
+                <div id="customIdsGroup" class="custom-ids-group" style="display: none;">
+                    <label for="id_custom_ids">{{ form.custom_ids.label }}</label>
+                    {{ form.custom_ids }}
+                    <div class="help-text">{{ form.custom_ids.help_text }}</div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Xabar matni</h3>
+                <div class="form-group">
+                    <label for="id_message">{{ form.message.label }}</label>
+                    {{ form.message }}
+                    <div class="char-counter">
+                        <span id="charCount">0</span> / 4096 belgi
+                    </div>
+                    <div class="help-text">{{ form.message.help_text }}</div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Matn formati</h3>
+                <div class="form-group">
+                    <label for="id_parse_mode">{{ form.parse_mode.label }}</label>
+                    {{ form.parse_mode }}
+                    <div class="help-text">Xabarning formatini tanlang</div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Media yuborish (ixtiyoriy)</h3>
+                <div class="form-group">
+                    <label for="id_media_type">{{ form.media_type.label }}</label>
+                    {{ form.media_type }}
+                    <div class="help-text">Rasm, video, audio yoki fayl yuborish mumkin</div>
+                </div>
+
+                <div id="mediaFileGroup" class="form-group" style="display: none;">
+                    <label for="id_media_file">{{ form.media_file.label }}</label>
+                    {{ form.media_file }}
+                    <div class="help-text" id="mediaHelp"></div>
                 </div>
             </div>
 
             <button type="submit" class="submit-btn" id="submitBtn">
-                <div class="btn-content" id="btnText">
-                    <span>📨 Xabarni Yuborish</span>
-                </div>
-                <div class="btn-spinner" id="btnSpinner">
-                    <div class="spinner"></div>
-                    <span>Yuborilmoqda...</span>
-                </div>
+                <span id="btnText">📨 Xabarni Yuborish</span>
+                <span id="btnSpinner" style="display: none;">
+                    <span class="spinner"></span> Yuborilmoqda...
+                </span>
             </button>
         </form>
     </div>
 </div>
 
-<div class="loading-overlay" id="loadingOverlay">
-    <div class="loading-content">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">Xabar yuborilmoqda...</div>
-        <p style="color: #6c757d; margin-top: 10px;">Bu biroz vaqt olishi mumkin</p>
-    </div>
-</div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const messageTypeSelect = document.getElementById('id_message_type');
+    const messageType = document.getElementById('id_message_type');
     const customIdsGroup = document.getElementById('customIdsGroup');
     const messageTextarea = document.getElementById('id_message');
     const charCount = document.getElementById('charCount');
     const submitBtn = document.getElementById('submitBtn');
     const btnText = document.getElementById('btnText');
     const btnSpinner = document.getElementById('btnSpinner');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const previewSection = document.getElementById('previewSection');
-    const previewContent = document.getElementById('previewContent');
+    const mediaType = document.getElementById('id_media_type');
+    const mediaFileGroup = document.getElementById('mediaFileGroup');
+    const mediaFileInput = document.getElementById('id_media_file');
+    const mediaHelp = document.getElementById('mediaHelp');
 
-    // Custom IDs guruhini ko'rsatish/yashirish
-    function toggleCustomIdsGroup() {
-        customIdsGroup.style.display = messageTypeSelect.value === 'custom' ? 'block' : 'none';
+    // Media help texti
+    const mediaHelpTexts = {
+        'photo': 'JPG, PNG formati, maksimum 5MB',
+        'video': 'MP4, MOV formati, maksimum 50MB',
+        'audio': 'MP3, OGG formati, maksimum 50MB',
+        'document': 'Har qanday fayl, maksimum 50MB',
+    };
+
+    // Custom IDs guruhini ko'rsatish
+    function toggleCustomIds() {
+        customIdsGroup.style.display = messageType.value === 'custom' ? 'block' : 'none';
     }
 
-    messageTypeSelect.addEventListener('change', toggleCustomIdsGroup);
-    toggleCustomIdsGroup();
+    messageType.addEventListener('change', toggleCustomIds);
+    toggleCustomIds();
 
-    // Belgilar sonini hisoblash va ko'rsatish
+    // Media tanlangan bo'lsa fayl guruhi ko'rsatish
+    function toggleMediaFile() {
+        const isMedia = mediaType.value !== 'none';
+        mediaFileGroup.style.display = isMedia ? 'block' : 'none';
+        
+        if (isMedia) {
+            mediaFileInput.setAttribute('accept', getMediaAccept(mediaType.value));
+            mediaHelp.textContent = mediaHelpTexts[mediaType.value] || '';
+            mediaFileInput.required = true;
+        } else {
+            mediaFileInput.removeAttribute('accept');
+            mediaFileInput.required = false;
+            mediaFileInput.value = '';
+        }
+    }
+
+    function getMediaAccept(type) {
+        const accepts = {
+            'photo': 'image/jpeg,image/png',
+            'video': 'video/mp4,video/quicktime',
+            'audio': 'audio/mpeg,audio/ogg,audio/mp3',
+            'document': '*/*',
+        };
+        return accepts[type] || '';
+    }
+
+    mediaType.addEventListener('change', toggleMediaFile);
+    toggleMediaFile();
+
+    // Belgilar sonini hisoblash
     function updateCharCount() {
         const count = messageTextarea.value.length;
+        charCount.parentElement.classList.remove('warning', 'error');
         charCount.textContent = count;
-
-        // Rang o'zgarishi
-        if (count > 3800) {
-            charCount.style.color = '#f72585';
-        } else if (count > 3000) {
-            charCount.style.color = '#f8961e';
-        } else {
-            charCount.style.color = '#4361ee';
+        
+        if (count > 4096) {
+            charCount.parentElement.classList.add('error');
+        } else if (count > 3500) {
+            charCount.parentElement.classList.add('warning');
         }
     }
 
     messageTextarea.addEventListener('input', updateCharCount);
     updateCharCount();
 
-    // Xabar preview
+    // Recipient types
+    const recipientLabels = {
+        'all': '🌍 Barcha foydalanuvchilar',
+        'users': '👥 Yo\'lovchilar',
+        'drivers': '🚗 Haydovchilar',
+        'banned': '🚫 Bloklanganlar',
+        'custom': '📌 Maxsus ro\'yxat'
+    };
+
+    // Xabar turi labels
+    const mediaLabels = {
+        'none': '📝 Matn xabar',
+        'photo': '📸 Rasm',
+        'video': '🎥 Video',
+        'audio': '🎵 Audio',
+        'document': '📄 Fayl'
+    };
+
+    // Preview yangilash
     function updatePreview() {
-        const message = messageTextarea.value;
-        if (message.trim()) {
-            previewSection.style.display = 'block';
-            previewContent.innerHTML = message.replace(/\n/g, '<br>');
-        } else {
-            previewSection.style.display = 'none';
-        }
+        const recipients = recipientLabels[messageType.value] || '-';
+        const media = mediaLabels[mediaType.value] || '-';
+        const format = document.getElementById('id_parse_mode').value || 'Oddiy';
+
+        document.getElementById('previewRecipients').textContent = recipients;
+        document.getElementById('previewMediaType').textContent = media;
+        document.getElementById('previewFormat').textContent = format;
     }
 
-    messageTextarea.addEventListener('input', updatePreview);
-    updatePreview();
-
-    // Formani yuborish
+    // Form yuborish - preview ko'rsatish
     document.getElementById('messageForm').addEventListener('submit', function(e) {
-        const message = messageTextarea.value;
+        e.preventDefault();
+        
+        const message = messageTextarea.value.trim();
+        const mediaTypeValue = mediaType.value;
+        const sendPreview = document.getElementById('sendPreview');
 
-        if (!message.trim()) {
-            e.preventDefault();
-            showAlert('Iltimos, xabar matnini kiriting!', 'error');
+        if (!message) {
+            alert('Iltimos, xabar matnini kiriting!');
             return;
         }
 
         if (message.length > 4096) {
-            e.preventDefault();
-            showAlert('Xabar 4096 belgidan oshmasligi kerak!', 'error');
+            alert('Xabar 4096 belgidan oshmasligi kerak!');
             return;
         }
 
-        // Yuklash animatsiyasi
+        if (mediaTypeValue !== 'none' && !mediaFileInput.files.length) {
+            alert('Iltimos, media faylni tanlang!');
+            return;
+        }
+
+        // Preview ko'rsatish
+        updatePreview();
+        sendPreview.classList.add('show');
+        
+        // Scroll to preview
+        sendPreview.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    // Confirm button
+    document.getElementById('confirmBtn').addEventListener('click', function() {
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+        const btnSpinner = document.getElementById('btnSpinner');
+        
+        // Actual form submit
         btnText.style.display = 'none';
-        btnSpinner.style.display = 'flex';
-        loadingOverlay.style.display = 'flex';
+        btnSpinner.style.display = 'inline';
         submitBtn.disabled = true;
-
-        // Avtomatik yuborish 5 soniyadan keyin
-        setTimeout(() => {
-            if (loadingOverlay.style.display === 'flex') {
-                showAlert('Xabar yuborish biroz vaqt olmoqda. Iltimos kuting...', 'info');
-            }
-        }, 5000);
+        
+        // Form ni haqiqatan submit qilish
+        document.getElementById('messageForm').submit();
     });
 
-    // Alert funksiyasi
-    function showAlert(message, type = 'info') {
-        const alert = document.createElement('div');
-        alert.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            background: ${type === 'error' ? '#f72585' : type === 'success' ? '#4cc9f0' : '#4361ee'};
-            color: white;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            z-index: 10000;
-            animation: slideIn 0.3s ease;
-            font-weight: 500;
-        `;
-
-        alert.textContent = message;
-        document.body.appendChild(alert);
-
-        setTimeout(() => {
-            alert.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => document.body.removeChild(alert), 300);
-        }, 4000);
-    }
-
-    // Animatsiya uchun style qo'shish
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-    `;
-    document.head.appendChild(style);
-
-    // Form fieldlariga focus effekti
-    const formFields = document.querySelectorAll('select, textarea');
-    formFields.forEach(field => {
-        field.addEventListener('focus', function() {
-            this.parentElement.style.transform = 'translateY(-2px)';
-        });
-
-        field.addEventListener('blur', function() {
-            this.parentElement.style.transform = 'translateY(0)';
-        });
+    // Cancel button
+    document.getElementById('cancelBtn').addEventListener('click', function() {
+        const sendPreview = document.getElementById('sendPreview');
+        sendPreview.classList.remove('show');
+        
+        // Scroll back to form
+        document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
-    // Stat kartalari hover effekti
-    const statCards = document.querySelectorAll('.stat-card');
-    statCards.forEach(card => {
-        card.addEventListener('mouseenter', () => {
-            card.style.transform = 'translateY(-8px) scale(1.02)';
-        });
-
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = 'translateY(0) scale(1)';
-        });
-    });
+    // Form field changes
+    messageType.addEventListener('change', updatePreview);
+    mediaType.addEventListener('change', updatePreview);
+    document.getElementById('id_parse_mode').addEventListener('change', updatePreview);
 });
 </script>
 {% endblock %}

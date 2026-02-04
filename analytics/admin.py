@@ -2,8 +2,8 @@ from django.contrib import admin
 from django.shortcuts import render
 from django.urls import path
 from django.contrib import messages
-from django.http import HttpResponseRedirect
 import threading
+import time
 from django.core.cache import cache
 
 from analytics.forms import MassMessageForm
@@ -22,23 +22,39 @@ class CustomAdminSite(admin.AdminSite):
         ]
         return custom_urls + urls
 
-    def _send_message_in_background(self, message_type, message, parse_mode, custom_ids):
-        """Xabarni background thread da yuborish"""
+    # admin site class ichida
+
+    def _send_message_in_background(self, cache_key, message_type, message, parse_mode, custom_ids, media_type, media_file_bytes,
+                                    media_filename):
         try:
             sender = TelegramSender()
             results = sender.send_message_by_type(
-                message_type, message, parse_mode, custom_ids
+                message_type=message_type,
+                message=message,
+                parse_mode=parse_mode,
+                custom_ids=custom_ids,
+                media_type=media_type,
+                media_file_bytes=media_file_bytes,
+                media_filename=media_filename,
             )
-
-            # Natijani cache ga saqlash (1 soat davomida)
-            cache_key = f"message_result_{threading.current_thread().ident}"
+            total = results.get('success', 0) + results.get('failed', 0) + results.get('blocked', 0)
             cache.set(cache_key, {
                 'success': results.get('success', 0),
                 'failed': results.get('failed', 0),
-                'total': results.get('success', 0) + results.get('failed', 0)
+                'blocked': results.get('blocked', 0),
+                'total': total,
+                'status': 'completed',
+                'media_type': media_type,
             }, 3600)
-
         except Exception as e:
+            cache.set(cache_key, {
+                'success': 0,
+                'failed': 0,
+                'blocked': 0,
+                'total': 0,
+                'status': 'error',
+                'error': str(e),
+            }, 3600)
             print(f"Background xatolik: {e}")
 
     def send_message_view(self, request):
@@ -69,52 +85,58 @@ class CustomAdminSite(admin.AdminSite):
                     'total_users': 0
                 }
 
+        # Message result cache key - stable
+        message_result_cache_key = 'last_message_result'
+        message_result = cache.get(message_result_cache_key)
+        
         if request.method == 'POST':
-            form = MassMessageForm(request.POST)
+            form = MassMessageForm(request.POST, request.FILES)
             if form.is_valid():
                 message_type = form.cleaned_data['message_type']
-                message = form.cleaned_data['message']
-                parse_mode = form.cleaned_data['parse_mode']
+                message = form.cleaned_data.get('message', '') or ''
+                parse_mode = form.cleaned_data.get('parse_mode', '') or "HTML"
                 custom_ids = form.cleaned_data.get('custom_ids', [])
+                media_type = form.cleaned_data.get('media_type', 'none')
+                media_file = form.cleaned_data.get('media_file')  # InMemoryUploadedFile
 
-                # Background thread da yuborish
+                media_file_bytes = None
+                media_filename = None
+                if media_type != 'none' and media_file:
+                    media_file_bytes = media_file.read()
+                    media_filename = media_file.name
+
+                # Processing status cache set qilish
+                cache.set(message_result_cache_key, {'status': 'processing'}, 3600)
+                
+                # Background thread ishga tushing
                 thread = threading.Thread(
                     target=self._send_message_in_background,
-                    args=(message_type, message, parse_mode, custom_ids)
+                    args=(message_result_cache_key, message_type, message, parse_mode, custom_ids, media_type, media_file_bytes, media_filename)
                 )
                 thread.daemon = True
                 thread.start()
+                
+                messages.success(request, "📤 Xabar yuborish jarayoni boshlandi...")
 
-                messages.info(
-                    request,
-                    f"✅ Xabar yuborish jarayoni boshlandi! "
-                    f"{'Barcha foydalanuvchilar' if message_type == 'all' else ''}"
-                    f"{'Yo\'lovchilar' if message_type == 'users' else ''}"
-                    f"{'Haydovchilar' if message_type == 'drivers' else ''}"
-                    f"{'Bloklanganlar' if message_type == 'banned' else ''}"
-                    f"{'Maxsus ro\'yxat' if message_type == 'custom' else ''}"
-                    f" ga xabar yuborilmoqda..."
-                )
-
-                return HttpResponseRedirect('/dashboard/send-message/?status=processing')
+            else:
+                form = MassMessageForm()
+                # Form errorlarini ko'rsatish
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{field}: {error}")
 
         else:
             form = MassMessageForm()
 
             # URL dan parameterlarni olish
             telegram_ids = request.GET.get('ids', '')
-            message_type = request.GET.get('message_type', '')
+            message_type_param = request.GET.get('message_type', '')
 
             if telegram_ids:
                 form = MassMessageForm(initial={
-                    'message_type': 'custom' if message_type else 'all',
+                    'message_type': 'custom' if message_type_param else 'all',
                     'custom_ids': ','.join(str(id) for id in telegram_ids.split(','))
                 })
-
-            # Jarayon holatini tekshirish
-            status = request.GET.get('status', '')
-            if status == 'processing':
-                messages.info(request, "📤 Xabar yuborish jarayoni davom etmoqda...")
 
         context = self.each_context(request)
         context.update({
@@ -124,6 +146,7 @@ class CustomAdminSite(admin.AdminSite):
             'total_drivers': stats['total_drivers'],
             'total_passengers': stats['total_passengers'],
             'total_banned': stats['total_banned'],
+            'message_result': message_result,
             'opts': self._build_fake_model_options(),
         })
 
