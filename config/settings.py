@@ -21,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = env.SECRET_KEY
 
 # debug
-DEBUG = env.DEBUG
+DEBUG = False
 
 # local apps
 LOCAL_APPS = [

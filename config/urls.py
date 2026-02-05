@@ -22,12 +22,12 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
-    path('dashboard/', custom_admin_site.urls),
+    path('dashboard/', custom_admin_site.urls, name='custom_admin'),
     path('admin/', admin.site.urls),
     path('api/v1/', include('bot_app.urls')),
 
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
+    path('t/swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    path('t/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     path('swagger.json/', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger.yaml/', schema_view.without_ui(cache_timeout=0), name='schema-yaml'),
 ]

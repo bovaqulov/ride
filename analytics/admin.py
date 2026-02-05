@@ -21,6 +21,10 @@ class CustomAdminSite(admin.AdminSite):
             path('send-message/', self.admin_view(self.send_message_view), name='send_message'),
         ]
         return custom_urls + urls
+    
+    @property
+    def urls(self):
+        return self.get_urls(), self.name, 'custom_admin'
 
     # admin site class ichida
 

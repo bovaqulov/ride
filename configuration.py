@@ -73,7 +73,13 @@ class EventSettings(BaseSettings):
             'default': dj_database_url.config(
                 default=self.DB_URL,
                 conn_max_age=600,
-                ssl_require=False
+                ssl_require=False,
+                # Connection pooling sozlamalari
+                CONN_MAX_AGE=600,
+                OPTIONS={
+                    'connect_timeout': 10,
+                    'options': '-c statement_timeout=30000'  # 30 second statement timeout
+                } if 'postgres' in self.DB_URL else {}
             )
         }
 

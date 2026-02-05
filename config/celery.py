@@ -8,6 +8,11 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 app = Celery('config')
 app.config_from_object('django.conf:settings', namespace='CELERY')
 app.autodiscover_tasks()
+# celery.py-da qo'shish
+
+app.conf.worker_prefetch_multiplier = 1  # RAM yeyishhini kamaytirish
+app.conf.worker_max_tasks_per_child = 1000  # Memory leaks oldini olish
+
 
 @app.task(bind=True)
 def debug_task(self):
